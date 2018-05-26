@@ -40,6 +40,7 @@ DisplayHelp()
   echo "--debug (-d) : Save the build script and runner the debug file prior running it."
   echo "--build_script (-bs) <name> <out_path>: Build a script and return the value on the screen or on a file."
   echo "--run_script (-rs) <name> [<commands>...]: Build and Run Script."
+  echo "--run_test (-rt) <test_name> : Run unit test. You can use test file or test function. E.g.: -rt qa::Run json_tests"
   echo " "
 }
 
@@ -55,6 +56,7 @@ GetConfiguration()
   config_debug="0"
   config_build_script=("0", "", "")
   config_run_script=("0", "", "")
+  config_run_test=("0", "")
   while [[ $# != 0 ]]; do
       case $1 in
           --show_log|-ls)
@@ -109,6 +111,19 @@ GetConfiguration()
             log::Log "info" "1" "Requested run_script" "Name: ${config_run_script[1]} ; Commands: ${config_run_script[2]}"
             return 0
             ;;
+          --run_test|-rt)
+            if [[ $# < 2 ]]; then
+              echo "run_test: Missing parameters $#"
+              DisplayHelp
+              return 0
+            fi
+            config_run_test[0]="1"
+            config_run_test[1]="$2"
+            shift 2
+            # printf -v "config_run_test[2]" '%q ' "$@"
+            log::Log "info" "1" "Requested run_test" "Test Name: ${config_run_test[1]}"
+            return 0
+            ;;
           --)
               shift
               break
@@ -149,7 +164,7 @@ BuildScript()
 
 RunScript()
 {
-  # Usage BuildScript <in:name> <in:output_path>
+  # Usage RunScript <in:name> <in:commands>
   local in_name="$1"
   local in_commands="$2"
 
@@ -167,7 +182,13 @@ RunScript()
 
   eval "${full_script}"
   eval "${in_commands}"
-  return 0
+}
+
+RunTest()
+{
+  # Usage RunTest <in:test_name>
+  local test_name=$1
+  RunScript "qa" "qa::Run ${test_name}"
 }
 
 MainFunction()
@@ -175,6 +196,7 @@ MainFunction()
   log::Log "info" "5" "Main Execution" ""
   if [ "${config_build_script[0]}" == "1" ]; then BuildScript "${config_build_script[@]:1}"; fi
   if [ "${config_run_script[0]}" == "1" ]; then RunScript "${config_run_script[@]:1}"; fi
+  if [ "${config_run_test[0]}" == "1" ]; then RunTest "${config_run_test[1]}"; fi
 }
 
 # Main
