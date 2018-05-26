@@ -25,9 +25,7 @@ script::GetScriptDependencies()
   local in_script=$2
   log::Log "info" "5" "in_script" "${in_script}"
 
-  helper::GetScriptDir ret_script_dir 
-
-  local script_dir="${ret_script_dir}"
+  local script_dir="$(helper::GetScriptDir)"
   local config_file_path="${script_dir}/_${in_script}.json"
   script::GetDependencyFromConfig ret_file_dependencies "${config_file_path}"
 
@@ -59,9 +57,7 @@ script::BuildScript()
   in_source_script=$2
   log::Log "info" "5" "in_source_script" "${in_source_script}"
 
-  helper::GetScriptDir ret_script_dir 
-
-  local script_dir="${ret_script_dir}"
+  local script_dir="$(helper::GetScriptDir)"
   script::GetScriptDependencies ret_dependencies "${in_source_script}"
 
   local dependencies="${ret_dependencies}"

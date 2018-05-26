@@ -56,15 +56,12 @@ helper::GetResult()
 helper::GetScriptDir()
 {
   # Usage GetScriptDir <out:script_dir>
-  local out_script_dir=$1
+  # local out_script_dir=$1
   log::Log "info" "5" "Parameters" "out:script_dir: ${out_script_dir}"
 
   local script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   log::Log "info" "5" "Script Directory" "${script_dir}"
-  # eval "${out_script_dir}=$(printf '%q' "${script_dir}")"
-  # echo "${out_script_dir}=\"$(printf '%q' "${script_dir}")\""
-  # eval "${out_script_dir}=\"$(printf '%q' "${script_dir}")\""
-
-  printf -v "$out_script_dir" '%s' "$script_dir"
+  # printf -v "$out_script_dir" '%s' "$script_dir"
+  echo "${script_dir}"
 }
 
