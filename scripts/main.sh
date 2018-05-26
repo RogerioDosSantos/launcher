@@ -170,8 +170,7 @@ RunScript()
 
   log::Log "info" "5" "Parameters" "Name: ${in_name} ; Commands: ${in_output_path}"
 
-  script::BuildScript ret_full_script "${in_name}" 
-  local full_script="${ret_full_script}"
+  local full_script="$(script::BuildScript "${in_name}")"
   if [ "${config_debug}" == "1" ]; then
     log::Log "info" "5" "Debug: Dumping code to file" ".temp_debug"
     echo "${full_script}" > "./.temp_debug"
