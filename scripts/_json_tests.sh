@@ -1,27 +1,27 @@
 
-json_tests::Run()
-{
-  # Usage [<in:test_to_run>]
-  local in_test_to_run="$1" 
-  log::Log "info" "5" "in_test_to_run" "${in_test_to_run}"
-  qa::Init "json"
-  if [ "${in_test_to_run}" != "all" ]; then
-    eval "json_tests::${in_test_to_run}"
-    qa::End
-    return 0
-  fi
-
-  local function_list="$(declare -F | grep json_tests::)"
-  echo " ${function_list}" | while read -r function_name; do
-    if [[ ${function_name} = *"json_tests::Run"* ]]; then
-      continue
-    fi
-    function_name=" ${function_name/declare -f/}"
-    eval "${function_name}"
-	done
-
-  qa::End
-}
+# json_tests::Run()
+# {
+#   # Usage [<in:test_to_run>]
+#   local in_test_to_run="$1" 
+#   log::Log "info" "5" "in_test_to_run" "${in_test_to_run}"
+#   qa::Init "json"
+#   if [ "${in_test_to_run}" != "all" ]; then
+#     eval "json_tests::${in_test_to_run}"
+#     qa::End
+#     return 0
+#   fi
+#
+#   local function_list="$(declare -F | grep json_tests::)"
+#   echo " ${function_list}" | while read -r function_name; do
+#     if [[ ${function_name} = *"json_tests::Run"* ]]; then
+#       continue
+#     fi
+#     function_name=" ${function_name/declare -f/}"
+#     eval "${function_name}"
+# 	done
+#
+#   qa::End
+# }
 
 json_tests::VarsToJson()
 {

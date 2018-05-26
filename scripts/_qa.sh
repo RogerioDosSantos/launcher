@@ -13,6 +13,42 @@ qa::End()
   rm "${qa_config_temp_test_file}"
 }
 
+qa::Run()
+{
+  # Usage [<in:test_to_run>]
+  local in_test_to_run="$1" 
+  log::Log "info" "5" "in_test_to_run" "${in_test_to_run}"
+
+  local test_configs=(${in_test_to_run/::/ })
+  local test_name="${test_configs[0]}"
+  local test_function="${test_configs[1]}"
+  if [ "${test_name}" == "" ]; then
+    log::Log "error" "1" "Test not found" "${in_test_to_run}"
+    return 0
+  fi
+
+  local test_file_path="./_${test_name}.sh"
+  source "${test_file_path}"
+
+  qa::Init "${test_name}"
+  if [ "${test_function}" != "" ]; then
+    eval "${in_test_to_run}"
+    qa::End
+    return 0
+  fi
+
+  local function_list="$(declare -F | grep ${test_name}::)"
+  echo " ${function_list}" | while read -r function_name; do
+    # if [[ ${function_name} = *"json_tests::Run"* ]]; then
+    #   continue
+    # fi
+    function_name=" ${function_name/declare -f/}"
+    eval "${function_name}"
+	done
+
+  qa::End
+}
+
 qa::AddTestResult()
 {
   # Usage AddTestResult <test_name> <test_result> <error_message> <expected> <current>
