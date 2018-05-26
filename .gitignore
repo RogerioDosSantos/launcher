@@ -1,0 +1,10 @@
+**/stage
+**/.vs
+**/build/** 
+!**/build/*.sh
+!**/build/*.bat
+!**/build/*.cmake
+!**/build/*.in
+!**/build/DockerFile
+
+scripts/.temp_debug
