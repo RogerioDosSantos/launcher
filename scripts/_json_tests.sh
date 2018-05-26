@@ -11,7 +11,15 @@ json_tests::Run()
     return 0
   fi
 
-  # TODO(Roger) - Add logic to run all tests
+  local function_list="$(declare -F | grep json_tests::)"
+  echo " ${function_list}" | while read -r function_name; do
+    if [[ ${function_name} = *"json_tests::Run"* ]]; then
+      continue
+    fi
+    function_name=" ${function_name/declare -f/}"
+    eval "${function_name}"
+	done
+
   qa::End
 }
 
@@ -25,7 +33,7 @@ json_tests::VarsToJson()
   local pr4="4"
   json::VarsToJson pr1 pr2 pr3 pr4 | qa::AreEqual "4_assignments" "Wrong assignment"
 
-  local weird_chars='This is an json with weird chars []{}+_""!@#$$%^^&*((?/))' | qa::AreEqual "weird_chars" "Could not support weird charecters."
-  json::VarsToJson weird_chars
+  local weird_chars='This is an json with weird chars []{}+_""!@#$$%^^&*((?/))'
+  json::VarsToJson weird_chars | qa::AreEqual "weird_chars" "Could not support weird charecters."
 }
 

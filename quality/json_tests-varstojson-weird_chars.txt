@@ -1,1 +1,3 @@
-
+{
+  "weird_chars":"This is an json with weird chars []{}+_\"\"!@#$$%^^&*((?/))"
+}

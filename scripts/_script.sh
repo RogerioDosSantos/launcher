@@ -45,7 +45,6 @@ script::GetScriptDependencies()
     fi
     printf -v "all_dependencies" '%s\n%s' "${all_dependencies}" "${dependency}"
     # log::Log "info" "5" "out_full_script" "${out_full_script}"
-
 	done <<< "${file_dependencies}"
 
   all_dependencies=$( echo "${all_dependencies}" | sed -n '1!p' )

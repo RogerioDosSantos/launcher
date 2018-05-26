@@ -22,12 +22,13 @@ qa::AddTestResult()
   local in_expected=$4
   local in_current=$5
 
+  local caller=${FUNCNAME[2]}
   if [ "${in_test_result}" == "OK" ]; then
-    echo "[   ${in_test_name}   ] - OK" >> "${qa_config_temp_test_file}"
+    echo "[ ${caller} - ${in_test_name} ] - OK" >> "${qa_config_temp_test_file}"
     return 0
   fi
 
-  echo "[   ${in_test_name}   ] - ${in_test_result}" >> "${qa_config_temp_test_file}"
+  echo "[ ${caller} - ${in_test_name} ] - ${in_test_result}" >> "${qa_config_temp_test_file}"
   echo " - Reazon: ${in_error_message}" >> "${qa_config_temp_test_file}"
   echo " - Expected:" >> "${qa_config_temp_test_file}"
   echo "${in_expected}" >> "${qa_config_temp_test_file}"
