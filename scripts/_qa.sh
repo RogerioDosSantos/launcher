@@ -4,7 +4,7 @@ qa::Init()
   # Usage Init <test_name>
   local test_name="$1"
   qa_config_temp_test_file=".${test_name}_test_$(date '+%Y-%m-%d-%H-%M-%S')"
-  echo "======= Test ${test_name} =======" > "${qa_config_temp_test_file}"
+  echo "======= ${test_name} =======" > "${qa_config_temp_test_file}"
 }
 
 qa::End()
@@ -39,9 +39,6 @@ qa::Run()
 
   local function_list="$(declare -F | grep ${test_name}::)"
   echo " ${function_list}" | while read -r function_name; do
-    # if [[ ${function_name} = *"json_tests::Run"* ]]; then
-    #   continue
-    # fi
     function_name=" ${function_name/declare -f/}"
     eval "${function_name}"
 	done
