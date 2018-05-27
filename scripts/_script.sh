@@ -7,6 +7,7 @@ script::GetDependencyFromConfig()
   #Usage: GetDependencyFromConfig <in:file_path>
   local in_file_path=$1
 
+
   #TODO(Roger) - Load JSON and get the dependencies from it
   local dependencies=("json" "helper" "log" "qa" "script" "helper_tests")
 

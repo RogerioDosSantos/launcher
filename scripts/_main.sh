@@ -140,23 +140,23 @@ main::BuildScript()
 
 main::RunScript()
 {
-  # Usage RunScript <in:name> <in:commands>
-  local in_name="$1"
-  local in_commands="$2"
+  # Usage RunScript <in:script_function> <in:Parameters>
+  local in_script_function="$1"
+  local in_script_parameters="$2"
 
-  log::Log "info" "5" "Parameters" "Name: ${in_name} ; Commands: ${in_output_path}"
+  log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_output_path}"
 
-  local full_script="$(script::BuildScript "${in_name}")"
+  local full_script="$(script::BuildScript "${in_script_function}")"
   if [ "${config_debug}" == "1" ]; then
     log::Log "info" "5" "Debug: Dumping code to file" ".temp_debug"
     echo "${full_script}" > "./.temp_debug"
-    echo "${in_commands}" >> "./.temp_debug"
+    echo "${in_script_function} ${in_script_parameters}" >> "./.temp_debug"
     ./.temp_debug
     return 0
   fi
 
   eval "${full_script}"
-  eval "${in_commands}"
+  eval "${in_script_function} ${in_script_parameters}"
 }
 
 main::RunTest()
@@ -174,7 +174,6 @@ main::DockerExecute()
 main::Run()
 {
   log::Log "info" "5" "Main Execution" ""
-  # echo "$LINENO"
   if [ "${config_build_script[0]}" == "1" ]; then main::BuildScript "${config_build_script[@]:1}"; fi
   if [ "${config_run_script[0]}" == "1" ]; then main::RunScript "${config_run_script[@]:1}"; fi
   if [ "${config_run_test[0]}" == "1" ]; then main::RunTest "${config_run_test[1]}"; fi
