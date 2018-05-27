@@ -30,25 +30,28 @@ ScriptDetail()
 
 DisplayHelp()
 {
-  echo "${g_script_name/.sh/} --<command> [<command_options>]"
-  echo " "
-  echo "- Commands:"
-  echo "--help (h) : Display this command help"
-  echo "--log_enable (-le) : Enable log"
-  echo "--show_log (-ls) : Enable log and show it"
-  echo "--log_level (-ll) <level>: Define the Log Level (Default: ${config_log_level})"
-  echo "--log_type (-lt) <type>: Define the Log Type [Options: all, error, warning, info] (Default: ${config_log_type})"
-  echo "--debug (-d) : Save the build script and runner the debug file prior running it."
-  echo "--build_script (-bs) <name> <out_path>: Build a script and return the value on the screen or on a file."
-  echo "--run_script (-rs) <name> [<commands>...]: Build and Run Script."
-  echo "--run_test (-rt) <test_name> : Run unit test. You can use test file or test function. E.g.: -rt json_tests"
-  echo " "
+  # Usage DisplayHelp <in:file_path>
+  local file_path=$1
+
+  log::Log "info" "5" "Markdown File" "${file_path}"
+  if [ "${file_path}" == "" ]; then
+    doc::ShowMarkdown "../doc/src/index.md"
+    return 0
+  fi
+
+  if [ -f "${file_path}" ]; then
+    doc::ShowMarkdown "${file_path}"
+    return 0
+  fi
+
+  doc::ShowMarkdown "./_runner.md"
+  echo "${file_path}"
 }
 
 GetConfiguration()
 {
   if [[ $# == 0  ]]; then
-    doc::ShowMarkdown "../doc/src/index.md"
+    DisplayHelp
     return 0
   fi
 
@@ -90,7 +93,7 @@ GetConfiguration()
           --build_script|-bs)
             if [[ $# < 3 ]]; then
               echo "build_script: Missing parameters $#"
-              DisplayHelp
+              DisplayHelp "runner"
               return 0
             fi
             config_build_script[0]="1"
@@ -102,7 +105,7 @@ GetConfiguration()
           --run_script|-rs)
             if [[ $# < 2 ]]; then
               echo "run_script: Missing parameters $#"
-              DisplayHelp
+              DisplayHelp "runner"
               return 0
             fi
             config_run_script[0]="1"
@@ -115,7 +118,7 @@ GetConfiguration()
           --run_test|-rt)
             if [[ $# < 2 ]]; then
               echo "run_test: Missing parameters $#"
-              DisplayHelp
+              DisplayHelp "runner"
               return 0
             fi
             config_run_test[0]="1"
@@ -130,12 +133,12 @@ GetConfiguration()
               break
               ;;
           --help|-h)
-              DisplayHelp
+              DisplayHelp "./_${2}.md"
               exit
               ;;
           -*)
               log::Log "error" "1" "Unknown option" "$1"
-              DisplayHelp
+              DisplayHelp "runner"
               exit
               ;;
           *)

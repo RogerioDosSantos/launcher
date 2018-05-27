@@ -1,4 +1,3 @@
-
 # Main
 
 ```bash
@@ -24,4 +23,5 @@ main --<command> [<command_options>]
 `--run_script (-rs) <name> [<commands>...]` : Build and Run Script.
 
 `--run_test (-rt) <test_name>` : Run unit test. You can use test file or test function. E.g.: -rt json_tests
+
 
