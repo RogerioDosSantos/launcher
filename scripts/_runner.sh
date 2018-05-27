@@ -7,16 +7,17 @@ Init()
   g_caller_dir=$(pwd)
   cd "$(dirname "$0")"
   g_script_dir=$(pwd)
-  source "./_helper.sh"
-  source "./_log.sh"
-  source "./_script.sh"
-  log::Init
+
+  # g_session_dir="${g_script_dir}/${RANDOM}_runner_${RANDOM}"
+  # mkdir -p "${g_session_dir}"
 }
 
 End()
 {
-  log::Log "info" "5" "Returning to caller directory" "${g_caller_dir}"
-  log::End
+  # Log "info" "5" "Removing session directory" "${g_session_dir}"
+  # rm -r "${g_session_dir}"
+
+  Log "info" "5" "Returning to caller directory" "${g_caller_dir}"
   cd "${g_caller_dir}"
 }
 
@@ -25,23 +26,6 @@ ScriptDetail()
   log::Log "info" "5" "Script Name" "${g_script_name}"
   log::Log "info" "5" "Caller Directory" "${g_caller_dir}"
   log::Log "info" "5" "Script Directory" "${g_script_dir}"
-}
-
-DisplayHelp()
-{
-  echo "${g_script_name/.sh/} --<command> [<command_options>]"
-  echo " "
-  echo "- Commands:"
-  echo "--help (h) : Display this command help"
-  echo "--log_enable (-le) : Enable log"
-  echo "--show_log (-ls) : Enable log and show it"
-  echo "--log_level (-ll) <level>: Define the Log Level (Default: ${config_log_level})"
-  echo "--log_type (-lt) <type>: Define the Log Type [Options: all, error, warning, info] (Default: ${config_log_type})"
-  echo "--debug (-d) : Save the build script and runner the debug file prior running it."
-  echo "--build_script (-bs) <name> <out_path>: Build a script and return the value on the screen or on a file."
-  echo "--run_script (-rs) <name> [<commands>...]: Build and Run Script."
-  echo "--run_test (-rt) <test_name> : Run unit test. You can use test file or test function. E.g.: -rt json_tests"
-  echo " "
 }
 
 GetConfiguration()
@@ -144,62 +128,40 @@ GetConfiguration()
   done
 }
 
-BuildScript()
+RunDocker()
 {
-  # Usage BuildScript <in:name> <in:output_path>
-  local in_name="$1"
-  local in_output_path="$2"
+  # Usage: RunDocker <image_name> <session_dir> <commands>
 
-  log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
+  local docker_image=$1
+  shift 1
+  local session_dir=$1
+  shift 1
 
-  local full_script=""
-  script::BuildScript full_script "${in_name}" 
-  if [ "${in_output_path}" == "" ]; then
-    echo "${full_script}"
-    return 0
-  fi
+  local container_name="${docker_image/\//-}-${RANDOM}"
+  cd ${g_caller_dir}
+  local work_dir="$(pwd -P)"
+  NormalizeDir work_dir "${work_dir}"
+  NormalizeDir session_dir "${session_dir}"
 
-  echo "${full_script}" > "${in_output_path}"
-}
-
-RunScript()
-{
-  # Usage RunScript <in:name> <in:commands>
-  local in_name="$1"
-  local in_commands="$2"
-
-  log::Log "info" "5" "Parameters" "Name: ${in_name} ; Commands: ${in_output_path}"
-
-  local full_script="$(script::BuildScript "${in_name}")"
-  if [ "${config_debug}" == "1" ]; then
-    log::Log "info" "5" "Debug: Dumping code to file" ".temp_debug"
-    echo "${full_script}" > "./.temp_debug"
-    echo "${in_commands}" >> "./.temp_debug"
-    ./.temp_debug
-    return 0
-  fi
-
-  eval "${full_script}"
-  eval "${in_commands}"
-}
-
-RunTest()
-{
-  # Usage RunTest <in:test_name>
-  local test_name=$1
-  RunScript "qa" "qa::Run ${test_name}"
+  local shell_command="docker run -it --rm --name ${container_name} -v "${session_dir}":/session -v "${work_dir}":/work ${docker_image} $@"
+  Log "info" "5" "Docker Command" "${shell_command}"
+  eval ${shell_command}
+  # docker run -it --rm --name ${container_name} -v "${session_dir}":/session -v "${work_dir}":/work ${docker_image} "$@"
 }
 
 MainFunction()
 {
-  log::Log "info" "5" "Main Execution" ""
-  if [ "${config_build_script[0]}" == "1" ]; then BuildScript "${config_build_script[@]:1}"; fi
-  if [ "${config_run_script[0]}" == "1" ]; then RunScript "${config_run_script[@]:1}"; fi
-  if [ "${config_run_test[0]}" == "1" ]; then RunTest "${config_run_test[1]}"; fi
+  local post_execution="${g_session_dir}/exec.sh"
+  echo "" > "${post_execution}"
+
+  # exec &> "${g_session_dir}/run_image.log"
+  RunDocker "${config_image}" "${g_session_dir}" ${config_options}
+  # exec &>/dev/tty
+
+  ${post_execution}
 }
 
 # Main
-
 set -E
 trap 'log::ErrorHandler $LINENO' ERR
 
