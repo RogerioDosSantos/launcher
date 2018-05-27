@@ -10,6 +10,7 @@ Init()
   source "./_helper.sh"
   source "./_log.sh"
   source "./_script.sh"
+  source "./_doc.sh"
   log::Init
 }
 
@@ -47,7 +48,7 @@ DisplayHelp()
 GetConfiguration()
 {
   if [[ $# == 0  ]]; then
-    DisplayHelp
+    doc::ShowMarkdown "../doc/src/index.md"
     return 0
   fi
 
