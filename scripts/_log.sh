@@ -49,7 +49,7 @@ log::ErrorHandler()
   for function_name in "${FUNCNAME[@]:1}"; do
     log::Log "error" "2" "Stack" "${function_name}"
 	done
-  main::End
+  End
   exit 1
 }
 

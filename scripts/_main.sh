@@ -1,17 +1,4 @@
 
-main::Init()
-{
-  # Setup - Go to the directory where the bash file is
-  log::Init
-}
-
-main::End()
-{
-  log::Log "info" "5" "Returning to caller directory" "${g_caller_dir}"
-  log::End
-  cd "${g_caller_dir}"
-}
-
 main::ScriptDetail()
 {
   log::Log "info" "5" "Script Name" "${g_script_name}"
@@ -32,6 +19,7 @@ main::GetConfiguration()
   config_build_script=("0", "", "")
   config_run_script=("0", "", "")
   config_run_test=("0", "")
+  config_docker_execute=("0", "")
   while [[ $# != 0 ]]; do
       case $1 in
           --show_log|-ls)
@@ -97,6 +85,19 @@ main::GetConfiguration()
             shift 2
             # printf -v "config_run_test[2]" '%q ' "$@"
             log::Log "info" "1" "Requested run_test" "Test Name: ${config_run_test[1]}"
+            return 0
+            ;;
+            --docker_execute|-de)
+            
+            # if [[ $# < 2 ]]; then
+            #   echo "docker_execute : Missing parameters $#"
+            #   doc::Help "runner"
+            #   return 0
+            # fi
+            config_docker_execute[0]="1"
+            shift 1
+            printf -v "config_docker_execute[1]" '%q ' "$@"
+            log::Log "info" "1" "Requested docker_execute" "Commands: ${config_docker_execute[2]}"
             return 0
             ;;
           --)
@@ -165,22 +166,27 @@ main::RunTest()
   main::RunScript "qa" "qa::Run ${test_name}"
 }
 
+main::DockerExecute()
+{
+  bash -c "$@"
+}
+
 main::Run()
 {
   log::Log "info" "5" "Main Execution" ""
+  # echo "$LINENO"
   if [ "${config_build_script[0]}" == "1" ]; then main::BuildScript "${config_build_script[@]:1}"; fi
   if [ "${config_run_script[0]}" == "1" ]; then main::RunScript "${config_run_script[@]:1}"; fi
   if [ "${config_run_test[0]}" == "1" ]; then main::RunTest "${config_run_test[1]}"; fi
+  if [ "${config_docker_execute[0]}" == "1" ]; then main::DockerExecute "${config_docker_execute[1]}"; fi
 }
 
 main::Main()
 {
   # Usage Main <parameters>...
 
-  main::Init
   main::GetConfiguration "$@"
   main::ScriptDetail
   main::Run
-  main::End
 }
 

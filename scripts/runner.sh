@@ -26,6 +26,6 @@ set -E
 trap 'log::ErrorHandler $LINENO' ERR
 
 Init
-main::Main "$@"
+runner::Runner "$@"
 End
 

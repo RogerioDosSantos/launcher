@@ -5,6 +5,8 @@
 !**/build/*.bat
 !**/build/*.cmake
 !**/build/*.in
+!**/build/*.docker
 !**/build/DockerFile
 
 scripts/.temp_debug
+scripts/.temp_log_*

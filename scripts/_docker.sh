@@ -8,7 +8,6 @@ docker::BuildImage()
   docker build -t "${in_image_name}" "${in_docker_file_dir}"
 }
 
-
 docker::IsVirtualBox()
 {
   # Usage: IsVirtualBox
@@ -31,16 +30,16 @@ docker::NormalizeDir()
   local is_ubuntu_on_windows=$([ -e /proc/version ] && grep -l Microsoft /proc/version || echo "")
   local is_cygwin=$([ -e /proc/version ] && grep -l MINGW /proc/version || echo "")
   if [ -n "${is_ubuntu_on_windows}" ]; then
-    Log "info" "5" "Script is being called from Ubuntu on Windows" ""
+    log::Log "info" "5" "Script is being called from Ubuntu on Windows" ""
     if "$(docker::IsVirtualBox)" == "true"; then
-      Log "info" "5" "Docker Server is running on VirtualBox" ""
+      log::Log "info" "5" "Docker Server is running on VirtualBox" ""
       directory=${directory/\/mnt\//}
       directory="/${directory}"
       echo "${directory}"
       return 0
     fi
 
-    Log "info" "5" "Docker Server is running natively" ""
+    log::Log "info" "5" "Docker Server is running natively" ""
     directory=${directory/\/mnt\//}
     directory=${directory/\//:\/}
     echo "${directory}"
@@ -48,7 +47,7 @@ docker::NormalizeDir()
   fi
 
   if [ -n "${is_cygwin}" ]; then
-      Log "info" "5" "Docker Server is running on VirtualBox" ""
+      log::Log "info" "5" "Docker Server is running on VirtualBox" ""
       directory=${directory/\//}
       directory=${directory/\//:\/}
       echo "${directory}"

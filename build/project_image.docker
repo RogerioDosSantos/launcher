@@ -1,0 +1,20 @@
+# Launcher
+#
+# This image is used to control applications on docker containers and host machines
+#
+
+FROM rogersantos/launcher_base
+MAINTAINER Roger Santos (http://rogeriodossantos.github.io)
+
+WORKDIR /root/
+
+RUN mkdir -p /work \
+      mkdir -p /scripts \
+      mkdir -p /doc \
+      mkdir -p /quality 
+
+COPY ./scripts /scripts
+COPY ./quality /quality
+COPY ./doc /doc
+
+ENTRYPOINT ["/scripts/main.sh"]

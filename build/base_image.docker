@@ -1,0 +1,17 @@
+# Launcher Base Image
+#
+# This image is used to provide the OS and Applications required by the launcher
+#
+
+FROM ubuntu:16.04
+MAINTAINER Roger Santos (http://rogeriodossantos.github.io)
+
+WORKDIR /root/
+
+RUN apt-get update \
+  && apt-get install -y \
+             pandoc \
+             python \
+             lynx \
+	&& apt-get autoclean
+					
