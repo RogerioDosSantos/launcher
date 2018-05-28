@@ -145,8 +145,8 @@ main::RunScript()
   local in_script_parameters="$2"
 
   log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_output_path}"
-
-  local full_script="$(script::BuildScript "${in_script_function}")"
+  local script_name="$(echo "${in_script_function}" | cut -d: -f1)"
+  local full_script="$(script::BuildScript "${script_name}")"
   if [ "${config_debug}" == "1" ]; then
     log::Log "info" "5" "Debug: Dumping code to file" ".temp_debug"
     echo "${full_script}" > "./.temp_debug"
@@ -163,7 +163,7 @@ main::RunTest()
 {
   # Usage RunTest <in:test_name>
   local test_name=$1
-  main::RunScript "qa" "qa::Run ${test_name}"
+  main::RunScript "qa::Run" "${test_name}"
 }
 
 main::DockerExecute()
