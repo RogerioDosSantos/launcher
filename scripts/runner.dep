@@ -1,7 +1,2 @@
-
 source "./_runner.sh"
-source "./_helper.sh"
-source "./_log.sh"
-source "./_script.sh"
-source "./_doc.sh"
-source "./_docker.sh"
+source "./_runner.dep"

@@ -20,6 +20,7 @@ main::GetConfiguration()
   config_run_script=("0", "", "")
   config_run_test=("0", "")
   config_docker_execute=("0", "")
+  config_setup="0"
   while [[ $# != 0 ]]; do
       case $1 in
           --show_log|-ls)
@@ -87,18 +88,17 @@ main::GetConfiguration()
             log::Log "info" "1" "Requested run_test" "Test Name: ${config_run_test[1]}"
             return 0
             ;;
-            --docker_execute|-de)
-            
-            # if [[ $# < 2 ]]; then
-            #   echo "docker_execute : Missing parameters $#"
-            #   doc::Help "runner"
-            #   return 0
-            # fi
+          --docker_execute|-de)
             config_docker_execute[0]="1"
             shift 1
             printf -v "config_docker_execute[1]" '%q ' "$@"
             log::Log "info" "1" "Requested docker_execute" "Commands: ${config_docker_execute[2]}"
             return 0
+            ;;
+          --setup|-s)
+            config_setup="1"
+            log::Log "info" "1" "Setup Requested" ""
+            shift 1
             ;;
           --)
               shift
@@ -155,6 +155,7 @@ main::RunScript()
     return 0
   fi
 
+  # echo $(echo "${full_script}" | grep "json::VarsToJson()")
   eval "${full_script}"
   eval "${in_script_function} ${in_script_parameters}"
 }
@@ -162,13 +163,30 @@ main::RunScript()
 main::RunTest()
 {
   # Usage RunTest <in:test_name>
-  local test_name=$1
-  main::RunScript "qa::Run" "${test_name}"
+  local in_test_name=$1
+  # main::RunScript "qa::Run" "${in_test_name}"
+
+  echo "$in_test_name"
+  local script_name="$(echo "${in_test_name}" | cut -d: -f1)"
+  main::RunScript "${script_name}::Run" "${in_test_name}"
 }
 
 main::DockerExecute()
 {
   bash -c "$@"
+}
+
+main::Setup()
+{
+  echo "#!/bin/bash"
+  echo " "
+
+  local script="$(script::BuildScript "runner")"
+  echo "${script}"
+  echo " "
+  script=$(cat "./runner.sh" | sed -n '1!p')
+  echo "${script}"
+  echo " "
 }
 
 main::Run()
@@ -178,6 +196,7 @@ main::Run()
   if [ "${config_run_script[0]}" == "1" ]; then main::RunScript "${config_run_script[@]:1}"; fi
   if [ "${config_run_test[0]}" == "1" ]; then main::RunTest "${config_run_test[1]}"; fi
   if [ "${config_docker_execute[0]}" == "1" ]; then main::DockerExecute "${config_docker_execute[1]}"; fi
+  if [ "${config_setup}" == "1" ]; then main::Setup; fi
 }
 
 main::Main()

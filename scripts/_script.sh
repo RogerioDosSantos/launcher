@@ -37,11 +37,11 @@ script::GetDependencyFromConfig()
 script::GetScriptDependencies()
 {
   # Usage: GetScriptDependencies <in:script>
-  local in_script=$2
+  local in_script=$1
   log::Log "info" "5" "in_script" "${in_script}"
 
   local script_dir="$(helper::GetScriptDir)"
-  local config_file_path="${script_dir}/_${in_script}.json"
+  local config_file_path="${script_dir}/_${in_script}.dep"
   local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
   printf -v "file_dependencies" '%s\n%s' "${in_script}" "${file_dependencies}"
   local all_dependencies=""

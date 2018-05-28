@@ -1,4 +1,11 @@
 
+json_tests::Run()
+{
+  # Usage Run <in:test_name>
+  local in_test_name=$1
+  qa::Run "${in_test_name}"
+}
+
 # json_tests::Run()
 # {
 #   # Usage [<in:test_to_run>]
