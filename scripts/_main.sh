@@ -164,9 +164,7 @@ main::RunTest()
 {
   # Usage RunTest <in:test_name>
   local in_test_name=$1
-  # main::RunScript "qa::Run" "${in_test_name}"
 
-  echo "$in_test_name"
   local script_name="$(echo "${in_test_name}" | cut -d: -f1)"
   main::RunScript "${script_name}::Run" "${in_test_name}"
 }
