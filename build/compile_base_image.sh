@@ -5,5 +5,14 @@ cd "$(dirname "$0")"
 
 echo "* $(basename "$0")"
 echo " - Building base image"
-docker build -f ./base_image.docker -t "rogersantos/launcher_base" .
+
+proxy="$(printenv http_proxy)"
+
+if [ "${proxy}" == "" ]; then
+  docker build -f ./base_image.docker -t "rogersantos/launcher_base" .
+else
+  docker build -f ./base_image.docker --build-arg http_proxy="${proxy}" -t "rogersantos/launcher_base" .
+fi
+
+
 
