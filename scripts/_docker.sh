@@ -13,7 +13,7 @@ docker::IsVirtualBox()
   # Usage: IsVirtualBox
 
   local is_virtualbox_provider="$(docker info | grep provider=virtualbox)"
-  if [ ${is_virtualbox_provider} = "provider=virtualbox" ]; then
+  if [ "${is_virtualbox_provider}" = "provider=virtualbox" ]; then
     echo "true"
     return 0
   fi
