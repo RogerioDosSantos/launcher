@@ -3,7 +3,8 @@ log::Init()
 {
   log_config_show_log="0"
   log_config_log_enabled="0"
-  log_config_file_path=".temp_log_$(date '+%Y-%m-%d')"
+  # log_config_file_path=".temp_log_$(date '+%Y-%m-%d')"
+  log_config_file_path="../session/log"
 }
 
 log::End()
