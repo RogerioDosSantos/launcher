@@ -144,7 +144,7 @@ main::RunScript()
   local in_script_function="$1"
   local in_script_parameters="$2"
 
-  log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_output_path}"
+  log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_script_parameters}"
   local script_name="$(echo "${in_script_function}" | cut -d: -f1)"
   local full_script="$(script::BuildScript "${script_name}")"
   if [ "${config_debug}" == "1" ]; then
