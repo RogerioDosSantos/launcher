@@ -14,7 +14,11 @@ main --<command> [<command_options>]
 
 `--log_level (-ll) <level>` : Define the Log Level (Default: ${config_log_level})
 
-`--log_type (-lt) <type>` : Define the Log Type [Options: all, error, warning, info] (Default: ${config_log_type})
+`--log_type (-lt) <type>` : Define the Log Type [Options: all, error, warning, info]
+
+`--setup (-s)` : Allow the user to setup its machine by exporting the *runner*.
+
+`--serve (-se)` : Start the container and let it running indefinitely.
 
 `--debug (-d)` : Save the build script and runner the debug file prior running it.
 
@@ -26,4 +30,4 @@ main --<command> [<command_options>]
 
 `--docker_execute (-de) [<commands>...]` : Enter the docker machine on the bash command.
 
-`--setup (-s)` : Allow the user to setup its machine by exporting the *runner*.
+`--get_activity (-ga)` : Get the activity of an execution. 

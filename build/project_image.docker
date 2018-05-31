@@ -17,4 +17,5 @@ COPY ./scripts /scripts
 COPY ./quality /quality
 COPY ./doc /doc
 
-ENTRYPOINT ["/scripts/main.sh"]
+# ENTRYPOINT ["/scripts/main.sh"]
+ENTRYPOINT ["/bin/bash"]

@@ -54,3 +54,14 @@ log::ErrorHandler()
   exit 1
 }
 
+_log::GetActivity()
+{
+  # Usage GetActivity <in:command_id>
+  local command_id=$1
+  log::Log "info" "5" "command id" "${command_id}"
+  echo "$LINENO - GetActivity ${command_id}" 
+  sleep 5
+  echo "$LINENO - GetActivity ${command_id}" 
+  
+}
+

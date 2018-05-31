@@ -26,6 +26,7 @@ set -E
 trap 'log::ErrorHandler $LINENO' ERR
 
 Init
-runner::Runner "$@"
+runner::Runner "debug" "rogersantos/launcher" "${g_caller_dir}"  "$@"
+# runner::Runner "release" "rogersantos/launcher" "${g_caller_di}" "$@"
 End
 

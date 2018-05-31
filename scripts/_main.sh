@@ -1,11 +1,4 @@
 
-main::ScriptDetail()
-{
-  log::Log "info" "5" "Script Name" "${g_script_name}"
-  log::Log "info" "5" "Caller Directory" "${g_caller_dir}"
-  log::Log "info" "5" "Script Directory" "${g_script_dir}"
-}
-
 main::GetConfiguration()
 {
   if [[ $# == 0  ]]; then
@@ -21,6 +14,8 @@ main::GetConfiguration()
   config_run_test=("0", "")
   config_docker_execute=("0", "")
   config_setup="0"
+  config_get_activity=("0", "")
+  config_serve="0"
   while [[ $# != 0 ]]; do
       case $1 in
           --show_log|-ls)
@@ -49,6 +44,17 @@ main::GetConfiguration()
             config_debug="1"
             log::Log "info" "1" "Debug Enabled" ""
             shift 1
+            ;;
+          --get_activity|-ga)
+            if [[ $# < 1 ]]; then
+              echo "get_activity: Missing parameters $#"
+              doc::Help "runner"
+              return 0
+            fi
+            config_get_activity[0]="1"
+            config_get_activity[1]="$2"
+            log::Log "info" "5" "get_activity requested" "Command ID: ${config_get_activity[1]}"
+            shift 2
             ;;
           --build_script|-bs)
             if [[ $# < 3 ]]; then
@@ -100,6 +106,10 @@ main::GetConfiguration()
             log::Log "info" "1" "Setup Requested" ""
             shift 1
             ;;
+          --serv|-se)
+            config_serve="1"
+            shift 1
+            ;;
           --)
               shift
               break
@@ -118,6 +128,13 @@ main::GetConfiguration()
               ;;
       esac
   done
+}
+
+main::ScriptDetail()
+{
+  log::Log "info" "5" "Script Name" "${g_script_name}"
+  log::Log "info" "5" "Caller Directory" "${g_caller_dir}"
+  log::Log "info" "5" "Script Directory" "${g_script_dir}"
 }
 
 main::BuildScript()
@@ -187,14 +204,21 @@ main::Setup()
   echo " "
 }
 
+main::Serve()
+{
+  /bin/bash
+}
+
 main::Run()
 {
   log::Log "info" "5" "Main Execution" ""
+  if [ "${config_setup}" == "1" ]; then main::Setup; fi
+  if [ "${config_serve}" == "1" ]; then main::Serve; fi
+  if [ "${config_get_activity[0]}" == "1" ]; then _log::GetActivity "${config_get_activity[@]:1}"; fi
   if [ "${config_build_script[0]}" == "1" ]; then main::BuildScript "${config_build_script[@]:1}"; fi
   if [ "${config_run_script[0]}" == "1" ]; then main::RunScript "${config_run_script[@]:1}"; fi
   if [ "${config_run_test[0]}" == "1" ]; then main::RunTest "${config_run_test[1]}"; fi
   if [ "${config_docker_execute[0]}" == "1" ]; then main::DockerExecute "${config_docker_execute[1]}"; fi
-  if [ "${config_setup}" == "1" ]; then main::Setup; fi
 }
 
 main::Main()
