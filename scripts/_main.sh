@@ -6,9 +6,9 @@ main::GetConfiguration()
     return 0
   fi
 
+  script_config_debug="0"
   config_log_level="1"
   config_log_type="all"
-  config_debug="0"
   config_build_script=("0", "", "")
   config_run_script=("0", "", "")
   config_run_test=("0", "")
@@ -41,7 +41,7 @@ main::GetConfiguration()
             shift 2
             ;;
           --debug|-d)
-            config_debug="1"
+            script_config_debug="1"
             log::Log "info" "1" "Debug Enabled" ""
             shift 1
             ;;
@@ -137,53 +137,9 @@ main::ScriptDetail()
   log::Log "info" "5" "Script Directory" "${g_script_dir}"
 }
 
-main::BuildScript()
+main::Alive()
 {
-  # Usage BuildScript <in:name> <in:output_path>
-  local in_name="$1"
-  local in_output_path="$2"
-
-  log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
-
-  local full_script=""
-  script::BuildScript full_script "${in_name}" 
-  if [ "${in_output_path}" == "" ]; then
-    echo "${full_script}"
-    return 0
-  fi
-
-  echo "${full_script}" > "${in_output_path}"
-}
-
-main::RunScript()
-{
-  # Usage RunScript <in:script_function> <in:Parameters>
-  local in_script_function="$1"
-  local in_script_parameters="$2"
-
-  log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_script_parameters}"
-  local script_name="$(echo "${in_script_function}" | cut -d: -f1)"
-  local full_script="$(script::BuildScript "${script_name}")"
-  if [ "${config_debug}" == "1" ]; then
-    log::Log "info" "5" "Debug: Dumping code to file" ".temp_debug"
-    echo "${full_script}" > "./.temp_debug"
-    echo "${in_script_function} ${in_script_parameters}" >> "./.temp_debug"
-    ./.temp_debug
-    return 0
-  fi
-
-  # echo $(echo "${full_script}" | grep "json::VarsToJson()")
-  eval "${full_script}"
-  eval "${in_script_function} ${in_script_parameters}"
-}
-
-main::RunTest()
-{
-  # Usage RunTest <in:test_name>
-  local in_test_name=$1
-
-  local script_name="$(echo "${in_test_name}" | cut -d: -f1)"
-  main::RunScript "${script_name}::Run" "${in_test_name}"
+  echo "Worked"
 }
 
 main::DockerExecute()
@@ -215,16 +171,15 @@ main::Run()
   if [ "${config_setup}" == "1" ]; then main::Setup; fi
   if [ "${config_serve}" == "1" ]; then main::Serve; fi
   if [ "${config_get_activity[0]}" == "1" ]; then _log::GetActivity "${config_get_activity[@]:1}"; fi
-  if [ "${config_build_script[0]}" == "1" ]; then main::BuildScript "${config_build_script[@]:1}"; fi
-  if [ "${config_run_script[0]}" == "1" ]; then main::RunScript "${config_run_script[@]:1}"; fi
-  if [ "${config_run_test[0]}" == "1" ]; then main::RunTest "${config_run_test[1]}"; fi
+  if [ "${config_build_script[0]}" == "1" ]; then script::BuildScript "${config_build_script[@]:1}"; fi
+  if [ "${config_run_script[0]}" == "1" ]; then script::RunScript "${config_run_script[@]:1}"; fi
+  if [ "${config_run_test[0]}" == "1" ]; then script::RunTest "${config_run_test[1]}"; fi
   if [ "${config_docker_execute[0]}" == "1" ]; then main::DockerExecute "${config_docker_execute[1]}"; fi
 }
 
 main::Main()
 {
   # Usage Main <parameters>...
-
   main::GetConfiguration "$@"
   main::ScriptDetail
   main::Run
