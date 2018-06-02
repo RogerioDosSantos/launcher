@@ -165,6 +165,33 @@
 #   done
 # }
 
+# main::Run()
+# {
+#   log::Log "info" "5" "Main Execution" ""
+#   if [ "${config_setup}" == "1" ]; then main::Setup; fi
+#   if [ "${config_serve}" == "1" ]; then main::Serve; fi
+#   if [ "${config_get_activity[0]}" == "1" ]; then _log::GetActivity "${config_get_activity[@]:1}"; fi
+#   if [ "${config_build_script[0]}" == "1" ]; then script::BuildScript "${config_build_script[@]:1}"; fi
+#   if [ "${config_run_script[0]}" == "1" ]; then script::RunScript "${config_run_script[@]:1}"; fi
+#   if [ "${config_run_test[0]}" == "1" ]; then script::RunTest "${config_run_test[1]}"; fi
+#   if [ "${config_docker_execute[0]}" == "1" ]; then main::DockerExecute "${config_docker_execute[1]}"; fi
+# }
+
+# main::IsWorking()
+# {
+#   # Usage IsWorking <in:command_id>
+#   local in_command_id=$1
+#
+#   local done_file_path="/root/${in_command_id}.done"
+#   $(echo "${done_file_path}" > ~/done2.log)
+#   if [ -f "${done_file_path}" ]; then
+#     echo "false"
+#     return 0
+#   fi
+#
+#   echo "true"
+# }
+
 main::ScriptDetail()
 {
   log::Log "info" "5" "Script Name" "${g_script_name}"
@@ -195,47 +222,9 @@ main::Setup()
   echo " "
 }
 
-main::Run()
-{
-  log::Log "info" "5" "Main Execution" ""
-  if [ "${config_setup}" == "1" ]; then main::Setup; fi
-  if [ "${config_serve}" == "1" ]; then main::Serve; fi
-  if [ "${config_get_activity[0]}" == "1" ]; then _log::GetActivity "${config_get_activity[@]:1}"; fi
-  if [ "${config_build_script[0]}" == "1" ]; then script::BuildScript "${config_build_script[@]:1}"; fi
-  if [ "${config_run_script[0]}" == "1" ]; then script::RunScript "${config_run_script[@]:1}"; fi
-  if [ "${config_run_test[0]}" == "1" ]; then script::RunTest "${config_run_test[1]}"; fi
-  if [ "${config_docker_execute[0]}" == "1" ]; then main::DockerExecute "${config_docker_execute[1]}"; fi
-}
-
 main::Serve()
 {
   /bin/bash
-}
-
-main::ReportActivity()
-{
-  local id=$1
-  local input=""
-  while [ "${input}" != "execution finished!" ]; do
-    read input
-    echo "$(date "+%Y/%m/%d %H:%M:%S") - ${id} - ${input}" >> "${out_file_path}"
-  done
-}
-
-main::ExecScript()
-{
-  # Usage ExecScript <id>
-  local id=$1
-
-  # local out_file_path="/root/${id}.out"
-  out_file_path="/root/${id}.out"
-  [ -p "${out_file_path}"  ] || mkfifo "${out_file_path}";
-
-  /scripts/t1.sh 2>&1 | main::ReportActivity "${id}"
-
-  echo "success" 
-  echo " " > "/root/${id}.done"
-  echo " " > "${out_file_path}"
 }
 
 main::RunCommand()
@@ -252,39 +241,8 @@ main::RunCommand()
   local id="fake_${RANDOM}"
   local status_file_path="/root/${id}.status"
   echo "working" > "${status_file_path}"
-  main::ExecScript "${id}" &> "${status_file_path}" &
-
+  script::ExecScript "${id}" &> "${status_file_path}" &
   echo "${id}"
-}
-
-main::GetActivity()
-{
-  # Usage GetActivity <in:command_id>
-  local in_command_id=$1
-  local out_file_path="/root/${in_command_id}.out"
-  while read line; do
-    echo "$line"
-  done < "${out_file_path}"
-
-  exec 5<>"${out_file_path}"
-  while read -t 0.5 line <& 5; do
-    echo ${line}
-	done
-}
-
-main::IsWorking()
-{
-  # Usage IsWorking <in:command_id>
-  local in_command_id=$1
-
-  local done_file_path="/root/${in_command_id}.done"
-  $(echo "${done_file_path}" > ~/done2.log)
-  if [ -f "${done_file_path}" ]; then
-    echo "false"
-    return 0
-  fi
-
-  echo "true"
 }
 
 main::ExecuteAction()
@@ -309,13 +267,13 @@ main::ExecuteAction()
             return 0
             ;;
           --get_activity|-ga)
-            main::GetActivity "$2"
+            script::GetActivity "$2"
             return 0
             ;;
-          --is_working|-iw)
-            main::IsWorking "$2" 
-            return 0
-            ;;
+          # --is_working|-iw)
+          #   main::IsWorking "$2" 
+          #   return 0
+          #   ;;
           --)
               shift
               break

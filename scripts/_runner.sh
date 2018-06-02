@@ -63,11 +63,11 @@ runner::StartContainer()
     local docker_scripts_dir=$(docker::NormalizeDir "${workspace_dir}/scripts")
     local docker_doc_dir=$(docker::NormalizeDir "${workspace_dir}/doc")
     local image_name="${in_image_name}_base"
-    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -v ${docker_work_dir}:/work -v ${docker_session_dir}:/session -v ${docker_scripts_dir}:/scripts -v ${docker_doc_dir}:/doc ${image_name} -se"
+    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -e CONTAINER_NAME=\"${in_container_name}\" -v ${docker_work_dir}:/work -v ${docker_session_dir}:/session -v ${docker_scripts_dir}:/scripts -v ${docker_doc_dir}:/doc ${image_name} -se"
   else
     local docker_work_dir=$(docker::NormalizeDir "${caller_dir}")
     local image_name="${in_image_name}"
-    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -v ${docker_work_dir}:/work ${image_name} -se"
+    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -e CONTAINER_NAME=\"${in_container_name}\" -v ${docker_work_dir}:/work ${image_name} -se"
   fi
 
   log::Log "info" "5" "Docker Command" "${shell_command}"
@@ -114,8 +114,6 @@ runner::Runner()
   # log_config_log_enabled="1"
   # log_config_file_path="temp.log"
 
-    echo "$LINENO - Host "
-
   # Usage Runner <in:execution_type> <in:image_name> <in:caller_dir> <in:parameters>...
   local in_execution_type=$1
   local in_image_name=$2
@@ -124,13 +122,9 @@ runner::Runner()
 
   local container_id=$(if [ "${in_execution_type}" == "debug" ]; then echo "debug"; else echo ${RANDOM}; fi)
   local container_name="$(echo "${in_image_name}" | cut -d "/" -f 2)-${container_id}"
-
   runner::StartContainer "${in_execution_type}" "${in_image_name}" "${container_name}" "${in_caller_dir}"
 
-    echo "$LINENO - Host - $command_id"
-
   local command_id=$(runner::RunCommand "${container_name}" -rc "$@")
-    echo "$LINENO - Host - $command_id"
   if [ "${command_id}" == "-1" ] || [ "${command_id}" == "" ]; then
     log::Log "info" "5" "Could not find command" "${shell_command}"
     echo "Invalid command: $@"
@@ -139,24 +133,12 @@ runner::Runner()
     return 0
   fi
 
-    echo "$LINENO - Host - $command_id"
-
-  local is_working="true"
-  # echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
-  while [ "${is_working}" == "true" ]; do
-    # echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
+  while [ true ]; do
     local activity=$(runner::RunCommand ${container_name} -ga "${command_id}")
-    echo "$LINENO - Host $(date +%H:%M:%S) - $activity"
-    is_working=$(runner::RunCommand ${container_name} -iw "${command_id}")
-    # echo "$LINENO - Host $(date +%H:%M:%S) - $is_working"
+    # echo "$LINENO - Activity=${activity}"
+    # echo "$LINENO - - - "
+    eval "${activity}"
+    # echo "$LINENO - - - "
   done 
-
-
-
-
-  # log::Log "info" "5" "Execution Type" "${shell_command}"
-
-  # runner::RunDocker "rogersantos/launcher" "launcher_${RANDOM}" "$@"
-
 }
 

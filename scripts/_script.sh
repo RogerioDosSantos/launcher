@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# echo "$LINENO - ${all_dependencies}"
-
 script::GetDependencyFromConfig()
 {
   #Usage: GetDependencyFromConfig <in:file_path>
@@ -25,7 +23,6 @@ script::GetDependencyFromConfig()
     dependency="${dependency/source \".\/_/}"
     dependency="${dependency/.sh\"/}"
     dependencies[${index}]="${dependency}"
-    # echo "$LINENO - ${index} - ${dependency}"
     index=$[index + 1]
   done <<< "$(cat "${in_file_path}")"
 
@@ -146,5 +143,118 @@ script::RunTest()
 
   local script_name="$(echo "${in_test_name}" | cut -d: -f1)"
   script::RunScript "${script_name}::Run" "${in_test_name}"
+}
+
+script::GetOutFilePath()
+{
+  # Usage GetOutFilePath <in:command_id>
+  local in_command_id=$1
+
+  echo "/root/${in_command_id}.out"
+}
+
+script::GetScriptFilePath()
+{
+  # Usage GetScriptFilePath <in:command_id>
+  local in_command_id=$1
+
+  echo "/root/${in_command_id}.sh"
+}
+
+script::GetCommandModeString()
+{
+  echo "__$(printenv 'CONTAINER_NAME')__script::command_mode__"
+}
+
+script::GetDisplayModeString()
+{
+  echo "__$(printenv 'CONTAINER_NAME')__script::display_mode__"
+}
+
+script::GetExitModeString()
+{
+  echo "__$(printenv 'CONTAINER_NAME')__script::exit_mode__"
+}
+
+script::SendExit()
+{
+  # Usage SendExit <in:command_id>
+  local in_command_id=$1
+
+  local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
+  echo "break" >> "${out_file_path}"
+}
+
+script::ReportActivity()
+{
+  # Usage <command> | ReportActivity <in:command_id>
+  local in_command_id=$1
+
+  local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
+
+  local command_mode="$(script::GetCommandModeString)"
+  local exit_mode="$(script::GetExitModeString)"
+  local display_mode="$(script::GetDisplayModeString)"
+  local current_mode="${display_mode}"
+  local command=""
+  local input=""
+  while [ "${input}" != "${exit_mode}" ]; do
+    read input
+    if [ "${input}" == "${display_mode}" ] || [ "${input}" == "${command_mode}" ] || [ "${input}" == "${exit_mode}" ]; then
+      if [ "${command}" != "" ]; then
+        echo "${command}" >> "${out_file_path}"
+        command=""
+      fi
+
+      current_mode="${input}"
+      continue
+    fi 
+
+    case "${current_mode}" in
+        "${display_mode}")
+          echo "echo \'${input}\'" >> "${out_file_path}"
+          ;;
+        "${command_mode}")
+          printf -v "command" '%s\n%s' "${command}" "${input}"
+          ;;
+        *)
+          ;;
+    esac
+  done
+
+  script::SendExit "${in_command_id}"
+}
+
+script::GetActivity()
+{
+  # Usage GetActivity <in:command_id>
+  local in_command_id=$1
+
+  local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
+  while read line; do
+    echo "$line"
+  done < "${out_file_path}"
+
+  exec 5<>"${out_file_path}"
+  while read -t 0.5 line <& 5; do
+    echo ${line}
+	done
+}
+
+script::ExecScript()
+{
+  # Usage ExecScript <in:command_id>
+  local in_command_id=$1
+
+  local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
+  [ -p "${out_file_path}"  ] || mkfifo "${out_file_path}";
+
+  local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
+  echo "#! /bin/bash" > "${exec_script_path}"
+  echo " " >> "${exec_script_path}"
+  echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${exec_script_path}"
+  echo " " >> "${exec_script_path}"
+  cat '/scripts/t1.sh' >> "${exec_script_path}"
+  /bin/bash "${exec_script_path}" 2>&1 | script::ReportActivity "${in_command_id}"
 }
 
