@@ -75,19 +75,47 @@ runner::StartContainer()
   log::Log "info" "5" "Execution result" "${resp}"
 }
 
-runner::ExecCommand()
+runner::StopContainer()
 {
-  # Usage: ExecCommand <container_name> <commands>...
+  # Usage: StopContainer <container_name>
+  local container_name=$1
+
+  #TODO(Roger) - Decide if I am going to stop the conatiner on release.
+  return 0
+
+  local shell_command="docker stop ${container_name}"
+  log::Log "info" "5" "Execution shell" "${shell_command}"
+  local result=$(/bin/bash -c "${shell_command}")
+  if [ "${result}" != "${container_name}" ]; then
+    log::Log "error" "1" "Could not stop container" "${container_name}"
+    log::Log "error" "2" "Error Detail" "${result}"
+  fi
+}
+
+runner::RunCommand()
+{
+  # Usage: RunCommand <container_name> <commands>...
   local container_name=$1
   shift 1
 
   local shell_command="docker exec launcher-debug /bin/bash -c \"/scripts/main.sh $@\""
   log::Log "info" "5" "Execution shell" "${shell_command}"
-  /bin/bash -c "${shell_command}"
+  command_id=$(/bin/bash -c "${shell_command}")
+  echo "${command_id}"
 }
+
 
 runner::Runner()
 {
+  # echo "$(docker::IsVirtualBox)"
+  # return 0
+
+  # log_config_show_log="1"
+  # log_config_log_enabled="1"
+  # log_config_file_path="temp.log"
+
+    echo "$LINENO - Host "
+
   # Usage Runner <in:execution_type> <in:image_name> <in:caller_dir> <in:parameters>...
   local in_execution_type=$1
   local in_image_name=$2
@@ -98,7 +126,33 @@ runner::Runner()
   local container_name="$(echo "${in_image_name}" | cut -d "/" -f 2)-${container_id}"
 
   runner::StartContainer "${in_execution_type}" "${in_image_name}" "${container_name}" "${in_caller_dir}"
-  runner::ExecCommand "${container_name}" "$@"
+
+    echo "$LINENO - Host - $command_id"
+
+  local command_id=$(runner::RunCommand "${container_name}" -rc "$@")
+    echo "$LINENO - Host - $command_id"
+  if [ "${command_id}" == "-1" ] || [ "${command_id}" == "" ]; then
+    log::Log "info" "5" "Could not find command" "${shell_command}"
+    echo "Invalid command: $@"
+    echo "$(runner::RunCommand ${container_name} -h)"
+    runner::StopContainer "${container_name}"
+    return 0
+  fi
+
+    echo "$LINENO - Host - $command_id"
+
+  local is_working="true"
+  echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
+  while [ "${is_working}" == "true" ]; do
+    echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
+    local activity=$(runner::RunCommand ${container_name} -ga "${command_id}")
+    echo "$LINENO - Host $(date +%H:%M:%S) - $activity"
+    is_working=$(runner::RunCommand ${container_name} -iw "${command_id}")
+    echo "$LINENO - Host $(date +%H:%M:%S) - $is_working"
+  done 
+
+
+
 
   # log::Log "info" "5" "Execution Type" "${shell_command}"
 

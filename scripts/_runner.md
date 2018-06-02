@@ -1,12 +1,10 @@
 # rogersantos-launcher Help
 
 ```bash
-rogersantos-launcher --<command> <parameters> 
+rogersantos-launcher [--<options> <parameters>...]  --<command> <parameters> 
 ```
  
-## Commands:
-
-`--help (h)` : Display this command help
+## Options:
 
 `--log_enable (-le)` : Enable log
 
@@ -15,4 +13,8 @@ rogersantos-launcher --<command> <parameters>
 `--log_level (-ll) <level>` : Define the Log Level (Default: ${config_log_level})
 
 `--log_type (-lt) <type>` : Define the Log Type [Options: all, error, warning, info] (Default: ${config_log_type})
+
+## Commands:
+
+`--help (h)` : Display this command help
 
