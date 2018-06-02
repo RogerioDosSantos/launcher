@@ -142,13 +142,13 @@ runner::Runner()
     echo "$LINENO - Host - $command_id"
 
   local is_working="true"
-  echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
+  # echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
   while [ "${is_working}" == "true" ]; do
-    echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
+    # echo "$LINENO - Host $(date +%H:%M:%S) - $command_id"
     local activity=$(runner::RunCommand ${container_name} -ga "${command_id}")
     echo "$LINENO - Host $(date +%H:%M:%S) - $activity"
     is_working=$(runner::RunCommand ${container_name} -iw "${command_id}")
-    echo "$LINENO - Host $(date +%H:%M:%S) - $is_working"
+    # echo "$LINENO - Host $(date +%H:%M:%S) - $is_working"
   done 
 
 

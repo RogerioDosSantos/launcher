@@ -261,19 +261,15 @@ main::GetActivity()
 {
   # Usage GetActivity <in:command_id>
   local in_command_id=$1
-
   local out_file_path="/root/${in_command_id}.out"
-  # local lines_read=0
-  # while [ "${lines_read}" == 0 ]; do
-    while read line; do
-      echo "$line"
-      # lines_read=$(expr ${lines_read} + 1)
-    done < "${out_file_path}"
+  while read line; do
+    echo "$line"
+  done < "${out_file_path}"
 
-    # if [ "${lines_read}" == 0  ]; then sleep "1"; fi
-  # done
-
-  # sed -i -e "1,${lines_read}d" "${out_file_path}"
+  exec 5<>"${out_file_path}"
+  while read -t 0.5 line <& 5; do
+    echo ${line}
+	done
 }
 
 main::IsWorking()
