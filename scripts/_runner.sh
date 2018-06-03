@@ -62,8 +62,9 @@ runner::StartContainer()
     local docker_session_dir=$(docker::NormalizeDir "${workspace_dir}/debug/session")
     local docker_scripts_dir=$(docker::NormalizeDir "${workspace_dir}/scripts")
     local docker_doc_dir=$(docker::NormalizeDir "${workspace_dir}/doc")
+    local docker_quality_dir=$(docker::NormalizeDir "${workspace_dir}/quality")
     local image_name="${in_image_name}_base"
-    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -e CONTAINER_NAME=\"${in_container_name}\" -v ${docker_work_dir}:/work -v ${docker_session_dir}:/session -v ${docker_scripts_dir}:/scripts -v ${docker_doc_dir}:/doc ${image_name} -se"
+    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -e CONTAINER_NAME=\"${in_container_name}\" -v ${docker_work_dir}:/work -v ${docker_session_dir}:/session -v ${docker_scripts_dir}:/scripts -v ${docker_doc_dir}:/doc -v ${docker_quality_dir}:/quality ${image_name} -se"
   else
     local docker_work_dir=$(docker::NormalizeDir "${caller_dir}")
     local image_name="${in_image_name}"
@@ -135,11 +136,11 @@ runner::Runner()
 
   while [ true ]; do
     local activity=$(runner::RunCommand "${container_name}" -gi "${command_id}")
-    echo "$LINENO - Instruction=${activity}"
-    echo "$LINENO - - - "
+    # echo "$LINENO - Instruction=${activity}"
+    # echo "$LINENO - - - "
     eval "${activity}"
     # runner::RunCommand "${container_name}" -ai "${command_id}" "script_command_answer"
-    echo "$LINENO - - - "
+    # echo "$LINENO - - - "
   done 
 }
 
