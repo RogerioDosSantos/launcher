@@ -271,19 +271,19 @@ script::ExecOnHost()
 
   if [ "${in_display}" == "true" ]; then
     commands[$index]=$(printf 'exec 5>&1 \n')
-    ((index++))
+    index=$((index+1))
     commands[$index]=$(printf 'local script_command_answer="$(%s | tee >(cat - >&5))" \n' "${in_command}")
-    ((index++))
+    index=$((index+1))
   else
     commands[$index]=$(printf 'local script_command_answer="$(%s)" \n' "${in_command}")
-    ((index++))
+    index=$((index+1))
   fi
 
   local container_name="$(script::GetContainerName)"
   local answer_file_path="$(script::GetAnswerFilePath "${script__command_id}")"
   [ -p "${answer_file_path}"  ] || mkfifo "${answer_file_path}";
   commands[$index]=$(printf 'echo "${script_command_answer}" | docker exec -i "%s" /bin/bash -c "cat > %s" - \n' "${container_name}" "${answer_file_path}")
-  ((index++))
+  index=$((index+1))
 
   local out_file_path="$(script::GetOutFilePath "${script__command_id}")"
   for line in "${commands[@]}"; do
@@ -296,27 +296,89 @@ script::ExecOnHost()
   done < "${answer_file_path}"
 }
 
+script::GetCommand()
+{
+  # Usage <in:command> <in:parameters>...
+  local in_command=$1
+  shift 1
+
+  local old_ifs=$IFS
+  IFS=$'\n'
+
+	local configs=( $(xargs -n1 <<<"$(cat /scripts/_command_table | grep -w "${in_command/-/\\-}")") )
+  IFS=${old_ifs}
+
+  local command_to_run="${configs[0]}"
+  for (( index=0; index<${configs[1]}; index++ )) ; do  
+    if [[ $# == 0 ]]; then
+      printf 'echo "Invalid Number of parameters" \n'
+      return 0
+    fi
+
+    printf -v 'command_to_run' '%s "%s"' "${command_to_run}" "$1"
+    shift 1
+	done
+
+  # printf 'echo "Result: %q" \n' "${command_to_run}" 
+  printf '%s \n' "${command_to_run}" 
+}
+
+script::GetScriptFromCommand()
+{
+  # Usage: GetScriptFromCommand <in:command>
+  local in_command=$1
+
+  echo "$(echo "${in_command}"| cut -d: -f1)"
+}
+
 script::ExecScript()
 {
-  # Usage ExecScript <in:command_id>
+  # Usage ExecScript <in:command_id> <in:commands>...
   local in_command_id=$1
+  shift 1
+
+  local index=0
+  local commands[$index]="#! /bin/bash"
+  local scripts[$index]="log"
+  index=$((index+1))
+  commands[$index]="trap \"echo $(script::GetExitModeString)\" EXIT"
+  scripts[$index]=""
+  index=$((index+1))
+  commands[$index]="script__command_id=${in_command_id}"
+  scripts[$index]=""
+
+  local current_command=""
+  while [[ $# != 0 ]]; do
+      case $1 in
+          -*)
+            index=$((index+1))
+            commands[$index]="$(script::GetCommand "$@")"
+            scripts[$index]="$(script::GetScriptFromCommand "${commands[$index]}")"
+            ;;
+          *)
+              ;;
+      esac
+      shift 1
+  done
+
+  local scripts_to_load="${scripts[0]}"
+  for script in "${scripts[@]:1}"; do
+    if [ "${script}" == "" ]; then 
+      continue
+    fi
+
+    printf -v "scripts_to_load" '"%s" "%s"' "${script}"
+  done
+
+  local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
+  echo "${commands[0]}" > "${exec_script_path}"
+  script::BuildScript "script_tests" >> "${exec_script_path}"
+  for script in "${commands[@]:1}"; do
+    echo "${script}" >> "${exec_script_path}"
+  done
 
   local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
   [ -p "${out_file_path}"  ] || mkfifo "${out_file_path}";
-
-  local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
-  echo "#! /bin/bash" > "${exec_script_path}"
-  echo " " >> "${exec_script_path}"
-  echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${exec_script_path}"
-  echo " " >> "${exec_script_path}"
-  echo "script__command_id=${in_command_id}" >> "${exec_script_path}"
-  echo " " >> "${exec_script_path}"
-
-  script::BuildScript "script_tests" >> "${exec_script_path}"
-  echo "qa::Init script_tests" >> "${exec_script_path}"
-  echo "script_tests::ExecOnHost" >> "${exec_script_path}"
-  echo "qa::End" >> "${exec_script_path}"
-
   /bin/bash "${exec_script_path}" 2>&1 | script::SendInstructions "${in_command_id}"
 }
 

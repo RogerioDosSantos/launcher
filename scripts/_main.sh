@@ -231,7 +231,6 @@ main::RunCommand()
 {
   # Usage: RunCommand <parameters>... with the following format:
   # [--<options> <parameters>...] --<command> [<parameters>...]
-  # echo "$LINENO - RunCommand $@"
 
   if [[ $# == 0  ]]; then
     echo "-1"
@@ -241,7 +240,7 @@ main::RunCommand()
   local id="fake_${RANDOM}"
   local status_file_path="/root/${id}.status"
   echo "working" > "${status_file_path}"
-  script::ExecScript "${id}" &> "${status_file_path}" &
+  script::ExecScript "${id}" "$@" &> "${status_file_path}" &
   echo "${id}"
 }
 
