@@ -1,0 +1,76 @@
+[
+{
+"Id": "sha256:e738dfbe7a10356ea998e8acc7493c0bfae5ed919ad7eb99550ab60d7f47e214",
+"RepoTags": [
+"alpine:2.6"
+],
+"RepoDigests": [
+"alpine@sha256:e9cec9aec697d8b9d450edd32860ecd363f2f3174c8338beb5f809422d182c63"
+],
+"Parent": "",
+"Comment": "",
+"Created": "2016-01-18T18:32:39.162138276Z",
+"Container": "556a728876db7b0e621adc029c87c649d32520804f8f15defd67bb070dc1a88d",
+"ContainerConfig": {
+"Hostname": "556a728876db",
+"Domainname": "",
+"User": "",
+"AttachStdin": false,
+"AttachStdout": false,
+"AttachStderr": false,
+"Tty": false,
+"OpenStdin": false,
+"StdinOnce": false,
+"Env": null,
+"Cmd": [
+"/bin/sh",
+"-c",
+"#(nop) ADD file:7dee8a455bcc39013aa168d27ece9227aad155adbaacbd153d94ca60113f59fc in /"
+],
+"Image": "",
+"Volumes": null,
+"WorkingDir": "",
+"Entrypoint": null,
+"OnBuild": null,
+"Labels": null
+},
+"DockerVersion": "1.8.3",
+"Author": "",
+"Config": {
+"Hostname": "556a728876db",
+"Domainname": "",
+"User": "",
+"AttachStdin": false,
+"AttachStdout": false,
+"AttachStderr": false,
+"Tty": false,
+"OpenStdin": false,
+"StdinOnce": false,
+"Env": null,
+"Cmd": null,
+"Image": "",
+"Volumes": null,
+"WorkingDir": "",
+"Entrypoint": null,
+"OnBuild": null,
+"Labels": null
+},
+"Architecture": "amd64",
+"Os": "linux",
+"Size": 4501436,
+"VirtualSize": 4501436,
+"GraphDriver": {
+"Data": null,
+"Name": "aufs"
+},
+"RootFS": {
+"Type": "layers",
+"Layers": [
+"sha256:27febb3ceff77486349658d0c6f1c00bc9459f39ea41dfc14fd42a37895a4e87"
+]
+},
+"Metadata": {
+"LastTagTime": "0001-01-01T00:00:00Z"
+}
+}
+]

@@ -1,0 +1,99 @@
+[
+{
+"Id": "sha256:7ad7beb85df84a6c1b33563b71466b34a3a37f0e3801dbb030f332126aaa919c",
+"RepoTags": [
+"alpine/git:1.0.3"
+],
+"RepoDigests": [
+"alpine/git@sha256:4d0c888b9ca6c2659d5c0fdd12659046dda26b8541b46db235895bbefdd1a679"
+],
+"Parent": "",
+"Comment": "",
+"Created": "2017-05-10T01:17:35.443016926Z",
+"Container": "1afeecd47f242558f636bb0f2c13930b4007b5b0d31a78080a9c7f8b6134cf2a",
+"ContainerConfig": {
+"Hostname": "84baa8e89c00",
+"Domainname": "",
+"User": "",
+"AttachStdin": false,
+"AttachStdout": false,
+"AttachStderr": false,
+"Tty": false,
+"OpenStdin": false,
+"StdinOnce": false,
+"Env": [
+"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+],
+"Cmd": [
+"/bin/sh",
+"-c",
+"#(nop) ",
+"CMD ["--help"]"
+],
+"ArgsEscaped": true,
+"Image": "sha256:f3083aa7e9e22bcc4ad39d8e2bbd977778f23fe92d775a8e8316bf6713d5f574",
+"Volumes": {
+"/git": {}
+},
+"WorkingDir": "/git",
+"Entrypoint": [
+"git"
+],
+"OnBuild": [],
+"Labels": {
+"maintainer": "Bill Wang <ozbillwang@gmail.com>"
+}
+},
+"DockerVersion": "17.03.1-ee-2",
+"Author": "",
+"Config": {
+"Hostname": "84baa8e89c00",
+"Domainname": "",
+"User": "",
+"AttachStdin": false,
+"AttachStdout": false,
+"AttachStderr": false,
+"Tty": false,
+"OpenStdin": false,
+"StdinOnce": false,
+"Env": [
+"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+],
+"Cmd": [
+"--help"
+],
+"ArgsEscaped": true,
+"Image": "sha256:f3083aa7e9e22bcc4ad39d8e2bbd977778f23fe92d775a8e8316bf6713d5f574",
+"Volumes": {
+"/git": {}
+},
+"WorkingDir": "/git",
+"Entrypoint": [
+"git"
+],
+"OnBuild": [],
+"Labels": {
+"maintainer": "Bill Wang <ozbillwang@gmail.com>"
+}
+},
+"Architecture": "amd64",
+"Os": "linux",
+"Size": 27752222,
+"VirtualSize": 27752222,
+"GraphDriver": {
+"Data": null,
+"Name": "aufs"
+},
+"RootFS": {
+"Type": "layers",
+"Layers": [
+"sha256:23b9c7b43573dd164619ad59e9d51eda4095926729f59d5f22803bcbe9ab24c2",
+"sha256:4f2db33663c0fa58bda176976c0738ced49a848ddfc2c44968f488d6437ec7bc",
+"sha256:45c443ca20faa4b2e74036aaef08c9b8bd25ec7ffbb48d17ab835c584d79f28a"
+]
+},
+"Metadata": {
+"LastTagTime": "0001-01-01T00:00:00Z"
+}
+}
+]
