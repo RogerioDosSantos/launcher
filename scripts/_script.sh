@@ -258,16 +258,6 @@ script::GetInstructions()
 	done
 }
 
-script::AnswerInstructions()
-{
-  # Usage: AnswerInstructions <in:command_id> <in:answer>
-  local in_command_id=$1
-  local in_answer=$2
-
-  local answer_file_path="$(script::GetAnswerFilePath "${in_command_id}")"
-  echo "${in_answer}" >> "${answer_file_path}"
-}
-
 script::ExecOnHost()
 {
   # Usage: ExecOnHost <in:display> <in:command>
@@ -304,11 +294,6 @@ script::ExecOnHost()
   while read line; do
     echo "$line"
   done < "${answer_file_path}"
-
-  # exec 5<>"${answer_file_path}"
-  # while read -t 0.5 line <& 5; do
-  #   echo ${line}
-	# done
 }
 
 script::ExecScript()
