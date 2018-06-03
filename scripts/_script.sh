@@ -168,6 +168,11 @@ script::GetScriptFilePath()
   echo "/root/${in_command_id}.sh"
 }
 
+script::GetContainerName()
+{
+  echo "$(printenv 'CONTAINER_NAME')"
+}
+
 script::GetCommandModeString()
 {
   echo "__$(printenv 'CONTAINER_NAME')__script::command_mode__"
@@ -269,26 +274,41 @@ script::ExecOnHost()
   local in_display=$1
   local in_command=$2
 
-  echo "$(script::GetCommandModeString)"
+  local index=0
+  local commands[$index]=""
+
+  # echo "$(script::GetCommandModeString)"
 
   if [ "${in_display}" == "true" ]; then
-    printf 'exec 5>&1 \n'
-    printf 'local script_command_answer="$(%s | tee >(cat - >&5))" \n' "${in_command}"
+    commands[$index]=$(printf 'exec 5>&1 \n')
+    ((index++))
+    commands[$index]=$(printf 'local script_command_answer="$(%s | tee >(cat - >&5))" \n' "${in_command}")
+    ((index++))
   else
-    printf 'local script_command_answer="$(%s)" \n' "${in_command}"
+    commands[$index]=$(printf 'local script_command_answer="$(%s)" \n' "${in_command}")
+    ((index++))
   fi
 
+  local container_name="$(script::GetContainerName)"
+  local answer_file_path="$(script::GetAnswerFilePath "${script__command_id}")"
+  [ -p "${answer_file_path}"  ] || mkfifo "${answer_file_path}";
+  commands[$index]=$(printf 'echo "${script_command_answer}" | docker exec -i "%s" /bin/bash -c "cat > %s" - \n' "${container_name}" "${answer_file_path}")
+  ((index++))
 
-  # echo "local script_command_answer=\"\$\(${in_command}\)\""
-  # echo "runner::RunCommand \"\$\{container_name\}\" -ai \"\$\{command_id\}\" \"\$\{script_command_answer\}\""
+  local out_file_path="$(script::GetOutFilePath "${script__command_id}")"
+  for line in "${commands[@]}"; do
+    # printf '%s \n' "${line}"
+    printf '%s \n' "${line}" > "${out_file_path}"
+  done
 
-  # echo "echo \"\$\{script_command_answer\}\""
-  # echo "runner::RunCommand \"\$\{container_name\}\" -ai \"\$\{command_id\}\" \"\$\{script_command_answer\}\""
+  while read line; do
+    echo "$line"
+  done < "${answer_file_path}"
 
-  #TODO(Roger) - Handle multi-line 
-  # printf 'script_command_answer+="\n$(echo "%s")" \n' "$(script::GetAnswerModeString)"
-  printf 'runner::RunCommand "${container_name}" -ai "${command_id}" "${script_command_answer}" > /dev/null \n'
-  echo "$(script::GetDisplayModeString)"
+  # exec 5<>"${answer_file_path}"
+  # while read -t 0.5 line <& 5; do
+  #   echo ${line}
+	# done
 }
 
 script::ExecScript()
@@ -304,10 +324,12 @@ script::ExecScript()
   echo " " >> "${exec_script_path}"
   echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${exec_script_path}"
   echo " " >> "${exec_script_path}"
+  echo "script__command_id=${in_command_id}" >> "${exec_script_path}"
+  echo " " >> "${exec_script_path}"
 
-  script::BuildScript "json_tests" >> "${exec_script_path}"
-  echo "qa::Init" >> "${exec_script_path}"
-  echo "json_tests::VarsToJson" >> "${exec_script_path}"
+  script::BuildScript "script_tests" >> "${exec_script_path}"
+  echo "qa::Init script_tests" >> "${exec_script_path}"
+  echo "script_tests::ExecOnHost" >> "${exec_script_path}"
   echo "qa::End" >> "${exec_script_path}"
 
   /bin/bash "${exec_script_path}" 2>&1 | script::SendInstructions "${in_command_id}"
