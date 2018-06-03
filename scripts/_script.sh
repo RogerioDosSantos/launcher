@@ -185,9 +185,9 @@ script::SendExit()
   echo "break" >> "${out_file_path}"
 }
 
-script::ReportActivity()
+script::SendInstructions()
 {
-  # Usage <command> | ReportActivity <in:command_id>
+  # Usage <command> | SendInstructions <in:command_id>
   local in_command_id=$1
 
   local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
@@ -225,9 +225,9 @@ script::ReportActivity()
   script::SendExit "${in_command_id}"
 }
 
-script::GetActivity()
+script::GetInstructions()
 {
-  # Usage GetActivity <in:command_id>
+  # Usage GetInstructions <in:command_id>
   local in_command_id=$1
 
   local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
@@ -255,6 +255,6 @@ script::ExecScript()
   echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${exec_script_path}"
   echo " " >> "${exec_script_path}"
   cat '/scripts/t1.sh' >> "${exec_script_path}"
-  /bin/bash "${exec_script_path}" 2>&1 | script::ReportActivity "${in_command_id}"
+  /bin/bash "${exec_script_path}" 2>&1 | script::SendInstructions "${in_command_id}"
 }
 

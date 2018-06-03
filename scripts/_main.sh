@@ -266,8 +266,8 @@ main::ExecuteAction()
             main::RunCommand "$@"
             return 0
             ;;
-          --get_activity|-ga)
-            script::GetActivity "$2"
+          --get_instructions|-gi)
+            script::GetInstructions "$2"
             return 0
             ;;
           # --is_working|-iw)

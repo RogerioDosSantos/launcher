@@ -134,7 +134,7 @@ runner::Runner()
   fi
 
   while [ true ]; do
-    local activity=$(runner::RunCommand ${container_name} -ga "${command_id}")
+    local activity=$(runner::RunCommand ${container_name} -gi "${command_id}")
     # echo "$LINENO - Activity=${activity}"
     # echo "$LINENO - - - "
     eval "${activity}"
