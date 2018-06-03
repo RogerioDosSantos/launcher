@@ -99,12 +99,11 @@ runner::RunCommand()
   local container_name=$1
   shift 1
 
-  local shell_command="docker exec launcher-debug /bin/bash -c \"/scripts/main.sh $@\""
+  local shell_command="docker exec "${container_name}" /bin/bash -c \"/scripts/main.sh $@\""
   log::Log "info" "5" "Execution shell" "${shell_command}"
   command_id=$(/bin/bash -c "${shell_command}")
   echo "${command_id}"
 }
-
 
 runner::Runner()
 {
