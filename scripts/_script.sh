@@ -1,149 +1,149 @@
 #!/bin/bash
 
-script::GetDependencyFromConfig()
-{
-  #Usage: GetDependencyFromConfig <in:file_path>
-  local in_file_path=$1
+# script::GetDependencyFromConfig()
+# {
+#   #Usage: GetDependencyFromConfig <in:file_path>
+#   local in_file_path=$1
+#
+#
+#   #TODO(Roger) - Load JSON and get the dependencies from it
+#   if [ ! -f "${in_file_path}" ]; then
+#     log::Log "error" "1" "File does not exist" "${in_file_path}"
+#     echo ""
+#     return 0
+#   fi
+#
+#   local index=0
+#   local dependencies=""
+#   while read -r dependency; do
+#     if [ "${dependency}" == "" ]; then
+#       continue
+#     fi
+#
+#     dependency="${dependency/source \".\/_/}"
+#     dependency="${dependency/.sh\"/}"
+#     dependencies[${index}]="${dependency}"
+#     index=$[index + 1]
+#   done <<< "$(cat "${in_file_path}")"
+#
+#   local result=""
+#   printf -v "result" '%s\n' "${dependencies[@]}"
+#   echo "${result%?}"
+# }
 
+# script::GetScriptDependencies()
+# {
+#   # Usage: GetScriptDependencies <in:script>
+#   local in_script=$1
+#   log::Log "info" "5" "in_script" "${in_script}"
+#
+#   local script_dir="$(helper::GetScriptDir)"
+#   local config_file_path="${script_dir}/_${in_script}.dep"
+#   local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
+#   printf -v "file_dependencies" '%s\n%s' "${in_script}" "${file_dependencies}"
+#   local all_dependencies=""
+#   while read -r dependency; do
+#     local has_dependency="$( echo "${all_dependencies}" | grep "${dependency}" | head -1 )"
+#     if [ "${has_dependency}" == "${dependency}" ]; then
+#       log::Log "info" "5" "Ignoring dependency" "${dependency}"
+#       continue
+#     fi
+#     printf -v "all_dependencies" '%s\n%s' "${all_dependencies}" "${dependency}"
+#     # log::Log "info" "5" "out_full_script" "${out_full_script}"
+# 	done <<< "${file_dependencies}"
+#
+#   all_dependencies=$( echo "${all_dependencies}" | sed -n '1!p' )
+#   echo "${all_dependencies}"
+# }
 
-  #TODO(Roger) - Load JSON and get the dependencies from it
-  if [ ! -f "${in_file_path}" ]; then
-    log::Log "error" "1" "File does not exist" "${in_file_path}"
-    echo ""
-    return 0
-  fi
+# script::BuildScript()
+# {
+#   # Usage: BuildScript <in:name> <in:output_path>
+#   local in_name=$1
+#   local in_output_path="$2"
+#   log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
+#
+#   local script_dir="$(helper::GetScriptDir)"
+#   local dependencies="$(script::GetScriptDependencies "${in_name}")"
+#   local code=""
+#   while read -r dependency; do
+#     log::Log "info" "5" "Adding dependency" "${dependency}"
+#     if [ "${dependency}" == "${in_name}" ]; then
+#       log::Log "warning" "1" "Cyclic Dependencies" "Script: ${in_name} ; File: ${file_path}"
+#       continue
+#     fi
+#
+#     local file_path="${script_dir}/_${dependency}.sh"
+#     if [ ! -f "${file_path}" ]; then
+#       log::Log "warning" "1" "Could not find dependency file" "Script: ${in_name} ; File: ${file_path}"
+#       continue
+# 		fi
+#
+#     printf -v "code" "%s\n\n#### ${dependency} ####\n\n%s\n" "${code}" "$(cat "${file_path}" )"
+# 	done <<< "${dependencies}"
+#
+#   local file_path="${script_dir}/_${in_name}.sh"
+#   printf -v "code" "%s\n\n#### ${in_name} ####\n\n%s\n" "${code}" "$(cat "${file_path}" )"
+#
+#   if [ "${in_output_path}" == "" ]; then
+#     echo "${code}"
+#     return 0
+#   fi
+#
+#   echo "${code}" > "${in_output_path}"
+# }
 
-  local index=0
-  local dependencies=""
-  while read -r dependency; do
-    if [ "${dependency}" == "" ]; then
-      continue
-    fi
+# script::RunScript()
+# {
+#   # Usage RunScript <in:script_function> <in:script_parameters>...
+#   local in_script_function="$1"
+#   local in_script_parameters="$2"
+#   log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_script_parameters}"
+#
+#   # local c1="sleep 15; echo 'finished 01'"
+#   # local c2="sleep 20; echo 'finished 02'"
+#   # local c3="sleep 25; echo 'finished 03'"
+#   # local status="while sleep 1; do echo \"still running\" ; done"
+#   # eval "${c1}" > "/session/c1.result" & pid1=$!
+#   # eval "${status}" & pids=$!
+#   # wait $pid1
+#   # kill $pids
+#
+#   local script_name="$(echo "${in_script_function}" | cut -d: -f1)"
+#   local id="${script_name}_$(date +%s%N)"
+#   local script_path="/session/${id}.sh"
+#   local output_path="/session/${id}.out"
+#   local pid_path="/session/${id}.pid"
+#   log_config_file_path="/session/${id}.log"
+#
+#   if [ "${script_config_debug}" == "1" ]; then
+#     log::Log "info" "5" "Debug: Dumping code to file" "${debug_script_path}"
+#     echo "${full_script}" > "${debug_script_path}"
+#     echo "${in_script_function} ${in_script_parameters}" >> "${debug_script_path}"
+#     return 0
+#   fi
+#
+#   script::BuildScript "${script_name}" > ${script_path} 2> "${output_path}"
+#   echo "${in_script_function} ${in_script_parameters}" >> "${script_path}"
+#   /bin/bash -c "${script_path}" &> "${output_path}" &
+#   echo $! > ${pid_path}
+#   echo "${id}"
+#   
+#   # local full_script="$(script::BuildScript "${script_name}")"
+#   #
+#   # # echo $(echo "${full_script}" | grep "json::VarsToJson()")
+#   # eval "${full_script}"
+#   # eval "${in_script_function} ${in_script_parameters}"
+# }
 
-    dependency="${dependency/source \".\/_/}"
-    dependency="${dependency/.sh\"/}"
-    dependencies[${index}]="${dependency}"
-    index=$[index + 1]
-  done <<< "$(cat "${in_file_path}")"
-
-  local result=""
-  printf -v "result" '%s\n' "${dependencies[@]}"
-  echo "${result%?}"
-}
-
-script::GetScriptDependencies()
-{
-  # Usage: GetScriptDependencies <in:script>
-  local in_script=$1
-  log::Log "info" "5" "in_script" "${in_script}"
-
-  local script_dir="$(helper::GetScriptDir)"
-  local config_file_path="${script_dir}/_${in_script}.dep"
-  local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
-  printf -v "file_dependencies" '%s\n%s' "${in_script}" "${file_dependencies}"
-  local all_dependencies=""
-  while read -r dependency; do
-    local has_dependency="$( echo "${all_dependencies}" | grep "${dependency}" | head -1 )"
-    if [ "${has_dependency}" == "${dependency}" ]; then
-      log::Log "info" "5" "Ignoring dependency" "${dependency}"
-      continue
-    fi
-    printf -v "all_dependencies" '%s\n%s' "${all_dependencies}" "${dependency}"
-    # log::Log "info" "5" "out_full_script" "${out_full_script}"
-	done <<< "${file_dependencies}"
-
-  all_dependencies=$( echo "${all_dependencies}" | sed -n '1!p' )
-  echo "${all_dependencies}"
-}
-
-script::BuildScript()
-{
-  # Usage: BuildScript <in:name> <in:output_path>
-  local in_name=$1
-  local in_output_path="$2"
-  log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
-
-  local script_dir="$(helper::GetScriptDir)"
-  local dependencies="$(script::GetScriptDependencies "${in_name}")"
-  local code=""
-  while read -r dependency; do
-    log::Log "info" "5" "Adding dependency" "${dependency}"
-    if [ "${dependency}" == "${in_name}" ]; then
-      log::Log "warning" "1" "Cyclic Dependencies" "Script: ${in_name} ; File: ${file_path}"
-      continue
-    fi
-
-    local file_path="${script_dir}/_${dependency}.sh"
-    if [ ! -f "${file_path}" ]; then
-      log::Log "warning" "1" "Could not find dependency file" "Script: ${in_name} ; File: ${file_path}"
-      continue
-		fi
-
-    printf -v "code" "%s\n\n#### ${dependency} ####\n\n%s\n" "${code}" "$(cat "${file_path}" )"
-	done <<< "${dependencies}"
-
-  local file_path="${script_dir}/_${in_name}.sh"
-  printf -v "code" "%s\n\n#### ${in_name} ####\n\n%s\n" "${code}" "$(cat "${file_path}" )"
-
-  if [ "${in_output_path}" == "" ]; then
-    echo "${code}"
-    return 0
-  fi
-
-  echo "${code}" > "${in_output_path}"
-}
-
-script::RunScript()
-{
-  # Usage RunScript <in:script_function> <in:script_parameters>...
-  local in_script_function="$1"
-  local in_script_parameters="$2"
-  log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_script_parameters}"
-
-  # local c1="sleep 15; echo 'finished 01'"
-  # local c2="sleep 20; echo 'finished 02'"
-  # local c3="sleep 25; echo 'finished 03'"
-  # local status="while sleep 1; do echo \"still running\" ; done"
-  # eval "${c1}" > "/session/c1.result" & pid1=$!
-  # eval "${status}" & pids=$!
-  # wait $pid1
-  # kill $pids
-
-  local script_name="$(echo "${in_script_function}" | cut -d: -f1)"
-  local id="${script_name}_$(date +%s%N)"
-  local script_path="/session/${id}.sh"
-  local output_path="/session/${id}.out"
-  local pid_path="/session/${id}.pid"
-  log_config_file_path="/session/${id}.log"
-
-  if [ "${script_config_debug}" == "1" ]; then
-    log::Log "info" "5" "Debug: Dumping code to file" "${debug_script_path}"
-    echo "${full_script}" > "${debug_script_path}"
-    echo "${in_script_function} ${in_script_parameters}" >> "${debug_script_path}"
-    return 0
-  fi
-
-  script::BuildScript "${script_name}" > ${script_path} 2> "${output_path}"
-  echo "${in_script_function} ${in_script_parameters}" >> "${script_path}"
-  /bin/bash -c "${script_path}" &> "${output_path}" &
-  echo $! > ${pid_path}
-  echo "${id}"
-  
-  # local full_script="$(script::BuildScript "${script_name}")"
-  #
-  # # echo $(echo "${full_script}" | grep "json::VarsToJson()")
-  # eval "${full_script}"
-  # eval "${in_script_function} ${in_script_parameters}"
-}
-
-script::RunTest()
-{
-  # Usage RunTest <in:test_name>
-  local in_test_name=$1
-
-  local script_name="$(echo "${in_test_name}" | cut -d: -f1)"
-  script::RunScript "${script_name}::Run" "${in_test_name}"
-}
+# script::RunTest()
+# {
+#   # Usage RunTest <in:test_name>
+#   local in_test_name=$1
+#
+#   local script_name="$(echo "${in_test_name}" | cut -d: -f1)"
+#   script::RunScript "${script_name}::Run" "${in_test_name}"
+# }
 
 script::GetOutFilePath()
 {
@@ -151,6 +151,14 @@ script::GetOutFilePath()
   local in_command_id=$1
 
   echo "/root/${in_command_id}.out"
+}
+
+script::GetAnswerFilePath()
+{
+  # Usage GetAnswerFilePath <in:command_id>
+  local in_command_id=$1
+
+  echo "/root/${in_command_id}.answer"
 }
 
 script::GetScriptFilePath()
@@ -174,6 +182,11 @@ script::GetDisplayModeString()
 script::GetExitModeString()
 {
   echo "__$(printenv 'CONTAINER_NAME')__script::exit_mode__"
+}
+
+script::GetAnswerModeString()
+{
+  echo "__$(printenv 'CONTAINER_NAME')__script::answer_mode__"
 }
 
 script::SendExit()
@@ -239,6 +252,44 @@ script::GetInstructions()
   while read -t 0.5 line <& 5; do
     echo ${line}
 	done
+}
+
+script::AnswerInstructions()
+{
+  # Usage: AnswerInstructions <in:command_id> <in:answer>
+  local in_command_id=$1
+  local in_answer=$2
+
+  local answer_file_path="$(script::GetAnswerFilePath "${in_command_id}")"
+  echo "${in_answer}" >> "${answer_file_path}"
+}
+
+script::ExecOnHost()
+{
+  # Usage: ExecOnHost <in:display> <in:command>
+  local in_display=$1
+  local in_command=$2
+
+  echo "$(script::GetCommandModeString)"
+
+  if [ "${in_display}" == "true" ]; then
+    printf 'exec 5>&1 \n'
+    printf 'local script_command_answer="$(%s | tee >(cat - >&5))" \n' "${in_command}"
+  else
+    printf 'local script_command_answer="$(%s)" \n' "${in_command}"
+  fi
+
+
+  # echo "local script_command_answer=\"\$\(${in_command}\)\""
+  # echo "runner::RunCommand \"\$\{container_name\}\" -ai \"\$\{command_id\}\" \"\$\{script_command_answer\}\""
+
+  # echo "echo \"\$\{script_command_answer\}\""
+  # echo "runner::RunCommand \"\$\{container_name\}\" -ai \"\$\{command_id\}\" \"\$\{script_command_answer\}\""
+
+  #TODO(Roger) - Handle multi-line 
+  # printf 'script_command_answer+="\n$(echo "%s")" \n' "$(script::GetAnswerModeString)"
+  printf 'runner::RunCommand "${container_name}" -ai "${command_id}" "${script_command_answer}" > /dev/null \n'
+  echo "$(script::GetDisplayModeString)"
 }
 
 script::ExecScript()

@@ -270,10 +270,10 @@ main::ExecuteAction()
             script::GetInstructions "$2"
             return 0
             ;;
-          # --is_working|-iw)
-          #   main::IsWorking "$2" 
-          #   return 0
-          #   ;;
+          --answer_instructions|-ai)
+            script::AnswerInstructions "$2" "$3"
+            return 0
+            ;;
           --)
               shift
               break

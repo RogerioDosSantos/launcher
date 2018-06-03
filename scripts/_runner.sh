@@ -134,11 +134,12 @@ runner::Runner()
   fi
 
   while [ true ]; do
-    local activity=$(runner::RunCommand ${container_name} -gi "${command_id}")
-    # echo "$LINENO - Activity=${activity}"
-    # echo "$LINENO - - - "
+    local activity=$(runner::RunCommand "${container_name}" -gi "${command_id}")
+    echo "$LINENO - Instruction=${activity}"
+    echo "$LINENO - - - "
     eval "${activity}"
-    # echo "$LINENO - - - "
+    # runner::RunCommand "${container_name}" -ai "${command_id}" "script_command_answer"
+    echo "$LINENO - - - "
   done 
 }
 
