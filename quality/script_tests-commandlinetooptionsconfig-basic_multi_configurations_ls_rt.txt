@@ -1,0 +1,2 @@
+ "--log_show" "-ls" "log::ShowLog" "0" "--log_show (-ls)" "Enable Log and show it at the end of the execution" ""
+ "--run_test" "-rt" "qa::Run" "1" "--run_test (-rt) <test_name>" "Execute the test informed." ""p1""

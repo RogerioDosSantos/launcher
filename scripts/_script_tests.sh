@@ -43,3 +43,21 @@ script_tests::BuildScript()
 {
   script::BuildScript "script_tests" | qa::AreEqual "t_" "-"
 }
+
+script_tests::GetCommandConfig()
+{
+  script::GetCommandConfig -rt "script_tests::CommandLineToOptionsConfig" | qa::AreEqual "basic_qa" "Could not get short option"
+  script::GetCommandConfig --run_test "script_tests::CommandLineToOptionsConfig" | qa::AreEqual "basic_qa" "Could not get long option"
+  script::GetCommandConfig --unexistent_option "p1" | qa::AreEqual "unexistent" "Found unexistent option"
+  script::GetCommandConfig --h | qa::AreEqual "wrong_option" "Found wrong option"
+}
+
+script_tests::CommandLineToOptionsConfig()
+{
+  script::CommandLineToOptionsConfig -rt | qa::AreEqual "basic_1_command_0_parameter" "Invalid config options"
+  script::CommandLineToOptionsConfig -rt "p1" | qa::AreEqual "basic_1_command_1_parameter" "Invalid config options"
+  script::CommandLineToOptionsConfig -rt "p1" "p2" "p3" | qa::AreEqual "basic_qa_multiple_parameters" "Invalid config options"
+  script::CommandLineToOptionsConfig -ls -rt "p1" | qa::AreEqual "basic_multi_configurations_ls_rt" "Invalid config options"
+  script::CommandLineToOptionsConfig -ls -ll 5 -lt "warning" -rt "p1" | qa::AreEqual "basic_multi_configurations_and_parameters_ls_ll_lt_rt" "Invalid config options"
+  script::CommandLineToOptionsConfig -rt "script_tests::CommandLineToOptionsConfig" | qa::AreEqual "basic_rt_config" "Invalid config options"
+}

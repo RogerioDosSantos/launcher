@@ -1,5 +1,73 @@
 #!/bin/bash
 
+script::GetCommandConfig()
+{
+  # Usage <in:command> <in:parameters>...
+  local in_command=$1
+  shift 1
+
+  echo "$(cat /scripts/_command_config | grep -w "\"${in_command/-/\\-}"\")"
+}
+
+script::CommandLineToOptionsConfig()
+{
+  # Usage : CommandLineToOptionsConfig <commands>...
+  
+  local current_config=""
+  local current_parameters=""
+
+  while [[ $# != 0 ]]; do
+      case $1 in
+          -*)
+            if [ "${current_config}" != "" ]; then
+              printf '%s \"%s\"\n' "${current_config}" "${current_parameters}"
+            fi
+            current_parameters=""
+            current_config="$(script::GetCommandConfig "$1")"
+            ;;
+          *)
+            if [ "${current_parameters}" == "" ]; then
+              printf -v "current_parameters" '"%s"' "$1"
+            else
+              printf -v "current_parameters" '%s "%s"' "${current_parameters}" "$1"
+            fi
+            ;;
+      esac
+      shift 1
+  done
+
+  if [ "${current_config}" != "" ]; then
+    printf '%s \"%s\"\n' "${current_config}" "${current_parameters}"
+  fi
+}
+
+script::GetCommand()
+{
+  # Usage <in:command> <in:parameters>...
+  local in_command=$1
+  shift 1
+
+  local old_ifs=$IFS
+  IFS=$'\n'
+
+	local configs=( $(xargs -n1 <<<"$(cat /scripts/_command_table | grep -w "${in_command/-/\\-}")") )
+  IFS=${old_ifs}
+
+  local command_to_run="${configs[0]}"
+  for (( index=0; index<${configs[1]}; index++ )) ; do  
+    if [[ $# == 0 ]]; then
+      printf 'echo "Invalid Number of parameters" \n'
+      return 0
+    fi
+
+    printf -v 'command_to_run' '%s "%s"' "${command_to_run}" "$1"
+    shift 1
+	done
+
+  # printf 'echo "Result: %q" \n' "${command_to_run}" 
+  printf '%s \n' "${command_to_run}" 
+}
+
 script::GetDependencyFromConfig()
 {
   #Usage: GetDependencyFromConfig <in:file_path>
@@ -297,33 +365,6 @@ script::ExecOnHost()
   while read line; do
     echo "$line"
   done < "${answer_file_path}"
-}
-
-script::GetCommand()
-{
-  # Usage <in:command> <in:parameters>...
-  local in_command=$1
-  shift 1
-
-  local old_ifs=$IFS
-  IFS=$'\n'
-
-	local configs=( $(xargs -n1 <<<"$(cat /scripts/_command_table | grep -w "${in_command/-/\\-}")") )
-  IFS=${old_ifs}
-
-  local command_to_run="${configs[0]}"
-  for (( index=0; index<${configs[1]}; index++ )) ; do  
-    if [[ $# == 0 ]]; then
-      printf 'echo "Invalid Number of parameters" \n'
-      return 0
-    fi
-
-    printf -v 'command_to_run' '%s "%s"' "${command_to_run}" "$1"
-    shift 1
-	done
-
-  # printf 'echo "Result: %q" \n' "${command_to_run}" 
-  printf '%s \n' "${command_to_run}" 
 }
 
 script::GetScriptFromCommand()

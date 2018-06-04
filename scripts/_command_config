@@ -1,0 +1,9 @@
+ "--run_test1" "-rt1" "qa::Run" "1" "--run_test (-rt) <test_name>" "Execute the test informed."
+ "--run_test" "-rt" "qa::Run" "1" "--run_test (-rt) <test_name>" "Execute the test informed."
+ "--help" "-h" "script::Help" "0" "--help (-h) [<options_or_command>]" "Display the help of a command"
+ "--manual" "-m" "script::Manual" "0" "--manual (-m) [<options_or_command>]" "Display the Manual of a command"
+ "--log_enable" "-le" "log::EnableLog" "0" "--log_enable (-le)" "Enable Log"
+ "--log_show" "-ls" "log::ShowLog" "0" "--log_show (-ls)" "Enable Log and show it at the end of the execution"
+ "--log_level" "-ll" "log::SetLogLevel" "1" "--log_level (-ll) <level>" "Define the level of the log system [1 (default) to 5]"
+ "--log_type" "-lt" "log::SetLogType" "1" "--log_type (-lt) <type>" "Define the verbosity of the log system. Options: error (default), warning, info"
+  
