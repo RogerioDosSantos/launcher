@@ -61,3 +61,22 @@ script_tests::CommandLineToOptionsConfig()
   script::CommandLineToOptionsConfig -ls -ll 5 -lt "warning" -rt "p1" | qa::AreEqual "basic_multi_configurations_and_parameters_ls_ll_lt_rt" "Invalid config options"
   script::CommandLineToOptionsConfig -rt "script_tests::CommandLineToOptionsConfig" | qa::AreEqual "basic_rt_config" "Invalid config options"
 }
+
+script_tests::GetElementFromCommandLine()
+{
+  script::GetElementFromCommandLine "2" '"p1" "p2" "p3" "p4"' | qa::AreEqual "basic_p2" "Could not get the proper element"
+  script::GetElementFromCommandLine "4" '"p1" "p2" "p3" "p4"' | qa::AreEqual "basic_p4" "Could not get the proper element"
+  script::GetElementFromCommandLine "2" '"p1" "" "p3" "p4"' | qa::AreEqual "basic_empty" "Could not get the proper element"
+  script::GetElementFromCommandLine "2" '"p1" "This is another item"  "p3" "p4"' | qa::AreEqual "basic_with_space" "Could not get the proper element"
+  script::GetElementFromCommandLine "2" '"p1" ""s1" "s2"" "p3" "p4"' | qa::AreEqual "basic_substring" "Could not get the proper element"
+  script::GetElementFromCommandLine "2" '"p1" "AAA "CCC"  BBB"  "p3" "p4"' | qa::AreEqual "inner_string_double_quotes" "Could not get the proper element"
+  script::GetElementFromCommandLine "2" '"p1" "AAA \"CCC\"  BBB"  "p3" "p4"' | qa::AreEqual "inner_string_double_quotes_in_the_result" "Could not get the proper element"
+}
+
+script_tests::BuildScriptFromConfig()
+{
+  local config="$(script::CommandLineToOptionsConfig -ls -rt "script_tests::CommandLineToOptionsConfig")"
+  echo "$config" | script::BuildScriptFromConfig "/quality/.temp_script.sh"
+  # echo "$config" #| script::BuildScriptFromConfig "/quality/.temp_script.sh"
+
+}
