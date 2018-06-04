@@ -74,8 +74,11 @@ script::GetElementFromCommandLine()
   local in_element=$1
   shift 1
 
-  local input_list=$(eval 'for word in '$@'; do echo $word; done')
+  local input_list="$(eval 'for word in '$@'; do echo "\"${word}\""; done')"
   printf '%s\n' "$(echo "${input_list}" | sed "${in_element}q;d")"
+
+  # echo "${input_list}"
+  # echo "$(echo "${input_list}" | sed "${in_element}q;d")"
 }
 
 script::BuildScriptFromConfig()
@@ -83,6 +86,8 @@ script::BuildScriptFromConfig()
   # Usage: <config> | BuildScriptFromConfig <in:out_file_path>
   local in_out_file_path=$1
 
+  local commands=('#! /bin/bash')
+  local scripts=()
   local input=""
   while true; do
     read input
@@ -90,11 +95,14 @@ script::BuildScriptFromConfig()
       break;
     fi
 
-    # local exec_function="$(script::GetElementFromCommandLine "3" "${input}") "
-    # local exec_parameter="$(script::GetElementFromCommandLine "7" "${input}") "
+    printf '%s\n' "$LINENO - ${input}"
+    local exec_function="$(script::GetElementFromCommandLine "3" "${input}") "
+    local exec_parameter="$(script::GetElementFromCommandLine "7" "${input}") "
+    commands+=("${exec_function} ${exec_parameter}")
 
-    printf '%s\n' "$LINENO - $input"
   done
+
+  printf '%s\n' "$LINENO - ${commands[@]}"
 }
 
 script::GetDependencyFromConfig()
