@@ -35,4 +35,11 @@ script_tests::GetScriptFromCommand()
   script::GetScriptFromCommand "test::tq" | qa::AreEqual "basic_positice_case" "Could not resolve script"
   script::GetScriptFromCommand "script::GetScriptFromCommand" | qa::AreEqual "basic_positice_case_1" "Could not resolve script"
   script::GetScriptFromCommand "script_tests::GetCommand" | qa::AreEqual "basic_positice_case_2" "Could not resolve script"
+
+  script::GetScriptFromCommand 'qa::Run "script_tests::GetScriptFromCommand"' | qa::AreEqual "qa_run_should_return_the_test_script" "qa::Run not handled properly"
+}
+
+script_tests::BuildScript()
+{
+  script::BuildScript "script_tests" | qa::AreEqual "t_" "-"
 }

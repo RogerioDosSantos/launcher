@@ -32,11 +32,13 @@ script::GetDependencyFromConfig()
 
 script::GetScriptDependencies()
 {
+  # TODO(Roger) - Change this to acept a list of dependencies
   # Usage: GetScriptDependencies <in:script>
   local in_script=$1
   log::Log "info" "5" "in_script" "${in_script}"
 
-  local script_dir="$(helper::GetScriptDir)"
+  # local script_dir="$(helper::GetScriptDir)"
+  local script_dir="/scripts"
   local config_file_path="${script_dir}/_${in_script}.dep"
   local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
   printf -v "file_dependencies" '%s\n%s' "${in_script}" "${file_dependencies}"
@@ -59,10 +61,11 @@ script::BuildScript()
 {
   # Usage: BuildScript <in:name> <in:output_path>
   local in_name=$1
-  local in_output_path="$2"
-  log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
+  # local in_output_path="$2"
+  # log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
 
-  local script_dir="$(helper::GetScriptDir)"
+  # local script_dir="$(helper::GetScriptDir)"
+  local script_dir="/scripts"
   local dependencies="$(script::GetScriptDependencies "${in_name}")"
   local code=""
   while read -r dependency; do
@@ -84,12 +87,12 @@ script::BuildScript()
   local file_path="${script_dir}/_${in_name}.sh"
   printf -v "code" "%s\n\n#### ${in_name} ####\n\n%s\n" "${code}" "$(cat "${file_path}" )"
 
-  if [ "${in_output_path}" == "" ]; then
+  # if [ "${in_output_path}" == "" ]; then
     echo "${code}"
     return 0
-  fi
+  # fi
 
-  echo "${code}" > "${in_output_path}"
+  # echo "${code}" > "${in_output_path}"
 }
 
 # script::RunScript()
@@ -328,7 +331,12 @@ script::GetScriptFromCommand()
   # Usage: GetScriptFromCommand <in:command>
   local in_command=$1
 
-  echo "$(echo "${in_command}"| cut -d: -f1)"
+  local current_command="$(echo "${in_command}"| cut -d\  -f1)"
+  if [ "${current_command}" == "qa::Run" ]; then
+    current_command="$(echo "${in_command/\"/}"| cut -d\  -f2)"
+  fi
+
+  echo "$(echo "${current_command}"| cut -d: -f1)"
 }
 
 script::ExecScript()
@@ -367,7 +375,7 @@ script::ExecScript()
       continue
     fi
 
-    printf -v "scripts_to_load" '"%s" "%s"' "${script}"
+    printf -v "scripts_to_load" '"%s" "%s"' "${scripts_to_load}" "${script}"
   done
 
   local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
@@ -376,6 +384,8 @@ script::ExecScript()
   for script in "${commands[@]:1}"; do
     echo "${script}" >> "${exec_script_path}"
   done
+
+  echo "echo \"${scripts_to_load}\"" >> "${exec_script_path}"
 
   local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
   [ -p "${out_file_path}"  ] || mkfifo "${out_file_path}";
