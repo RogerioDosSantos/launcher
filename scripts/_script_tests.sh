@@ -71,6 +71,8 @@ script_tests::GetElementFromCommandLine()
   script::GetElementFromCommandLine "2" '"p1" ""s1" "s2"" "p3" "p4"' | qa::AreEqual "basic_substring" "Could not get the proper element"
   script::GetElementFromCommandLine "2" '"p1" "AAA "CCC"  BBB"  "p3" "p4"' | qa::AreEqual "inner_string_double_quotes" "Could not get the proper element"
   script::GetElementFromCommandLine "2" '"p1" "AAA \"CCC\"  BBB"  "p3" "p4"' | qa::AreEqual "inner_string_double_quotes_in_the_result" "Could not get the proper element"
+  script::GetElementFromCommandLine "3" '"--log_show" "-ls" "log::ShowLog" "0" "--log_show (-ls)" "Enable Log and show it at the end of the execution" ""' | qa::AreEqual "log_command_get_function" "Could not get the proper element"
+  script::GetElementFromCommandLine "7" '"--log_show" "-ls" "log::ShowLog" "0" "--log_show (-ls)" "Enable Log and show it at the end of the execution" ""' | qa::AreEqual "log_command_get_parameters" "Could not get the proper element"
 }
 
 script_tests::BuildScriptFromConfig()

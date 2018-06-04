@@ -75,7 +75,7 @@ script::GetElementFromCommandLine()
   shift 1
 
   local input_list=$(eval 'for word in '$@'; do echo $word; done')
-  printf '%s\n' "$(printf "${input_list}" | sed "${in_element}q;d")"
+  printf '%s\n' "$(echo "${input_list}" | sed "${in_element}q;d")"
 }
 
 script::BuildScriptFromConfig()
@@ -90,18 +90,10 @@ script::BuildScriptFromConfig()
       break;
     fi
 
-    # local t1=""
-    # t1="${input/\"/\\\"}"
-    # printf -v 't1' '"%q"' "$input"
-    # t1=( $(xargs -n1 <<<"$input") )
-    
-    local input_list=$(eval 'for word in '$input'; do echo $word; done')
+    # local exec_function="$(script::GetElementFromCommandLine "3" "${input}") "
+    # local exec_parameter="$(script::GetElementFromCommandLine "7" "${input}") "
 
-    local previous_ifs=$IFS
-    IFS=$'\n'
-    set -- ${input_list}
-    IFS=${previous_ifs}
-    printf '%s\n' "$LINENO ($#)- $input"
+    printf '%s\n' "$LINENO - $input"
   done
 }
 
