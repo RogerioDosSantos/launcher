@@ -11,11 +11,13 @@ WORKDIR /root/
 RUN mkdir -p /work \
       mkdir -p /scripts_library \
       mkdir -p /doc \
-      mkdir -p /quality 
+      mkdir -p /quality \
+      mkdir -p /scripts \
 
 COPY ./scripts_library /scripts_library
 COPY ./quality /quality
 COPY ./doc /doc
+COPY ./scripts /scripts_
 
 # ENTRYPOINT ["/scripts_library/main.sh"]
 ENTRYPOINT ["/bin/bash"]

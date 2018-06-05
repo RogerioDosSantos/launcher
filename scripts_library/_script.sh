@@ -2,11 +2,16 @@
 
 script::GetCommandConfig()
 {
-  # Usage <in:command> <in:parameters>...
+  # Usage <in:command> <in:alternative>
   local in_command=$1
   shift 1
 
-  echo "$(cat /scripts_library/_command_config | grep -w "\"${in_command/-/\\-}"\")"
+  local config="$(cat /scripts_library/_command_config | grep -w "\"${in_command/-/\\-}"\")"
+  if [ "${config}" == "" ]; then
+    config="$(cat /scripts/_command_config | grep -w "\"${in_command/-/\\-}"\")"
+  fi
+
+  echo "${config}"
 }
 
 script::CommandLineToOptionsConfig()
@@ -22,6 +27,7 @@ script::CommandLineToOptionsConfig()
             if [ "${current_config}" != "" ]; then
               printf '%s \"%s\"\n' "${current_config}" "${current_parameters}"
             fi
+
             current_parameters=""
             current_config="$(script::GetCommandConfig "$1")"
             ;;
@@ -129,15 +135,10 @@ script::GetScriptDependencies1()
 			continue
 		fi
 
-  # echo "$LINENO - ${dependency} "
-  # return 0
-
-
-
+    # echo "$LINENO - ${dependency} "
+    # return 0
 
     local additional_depencies="$(script::GetScriptDependencies1 "${dependency}" "${dependencies[@]}")"
-
-    # dependencies+=("${dependency}")
     while read -r additional_dependency; do
       if [ "$(script::HasInArray "${additional_dependency}" "${dependencies[@]}")" == "true" ]; then
         continue
@@ -149,10 +150,6 @@ script::GetScriptDependencies1()
   done <<< "$(cat "${dependency_file_path}")"
 
   printf '%s\n' "${dependencies[@]}"
-
-  # local result=""
-  # printf -v "result" '%s\n' "${dependencies[@]}"
-  # echo "${result%?}"
 }
 
 script::BuildScriptFromConfig()
@@ -212,9 +209,18 @@ script::BuildScriptFromConfig()
   echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${in_out_file_path}"
   echo "script__command_id=${in_command_id}" >> "${in_out_file_path}"
   for script in "${scripts[@]}"; do
-    local script_file_path="/scripts_library/_${script}.sh"
-    # echo "$LINENO - ${script_file_path}"
     echo "#### ${script} ####" >> ${in_out_file_path}
+
+    local script_file_path="/scripts_library/_${script}.sh"
+    if [ ! -f "${script_file_path}" ]; then
+      script_file_path="/scripts/_${script}.sh"
+      if [ ! -f "${script_file_path}" ]; then
+        #TODO(Roger) - Display Help
+        echo "echo \"### Project not found: "${script}" ###\"" >> ${in_out_file_path}
+        return 0
+      fi
+    fi
+
     cat "${script_file_path}" >> ${in_out_file_path}
   done
 
@@ -253,71 +259,6 @@ script::GetDependencyFromConfig()
   local result=""
   printf -v "result" '%s\n' "${dependencies[@]}"
   echo "${result%?}"
-}
-
-script::GetScriptDependencies()
-{
-  # TODO(Roger) - Change this to acept a list of dependencies
-  # Usage: GetScriptDependencies <in:script>
-  local in_script=$1
-  log::Log "info" "5" "in_script" "${in_script}"
-
-  # local script_dir="$(helper::GetScriptDir)"
-  local script_dir="/scripts_library"
-  local config_file_path="${script_dir}/_${in_script}.dep"
-  local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
-  printf -v "file_dependencies" '%s\n%s' "${in_script}" "${file_dependencies}"
-  local all_dependencies=""
-  while read -r dependency; do
-    local has_dependency="$( echo "${all_dependencies}" | grep "${dependency}" | head -1 )"
-    if [ "${has_dependency}" == "${dependency}" ]; then
-      log::Log "info" "5" "Ignoring dependency" "${dependency}"
-      continue
-    fi
-    printf -v "all_dependencies" '%s\n%s' "${all_dependencies}" "${dependency}"
-    # log::Log "info" "5" "out_full_script" "${out_full_script}"
-	done <<< "${file_dependencies}"
-
-  all_dependencies=$( echo "${all_dependencies}" | sed -n '1!p' )
-  echo "${all_dependencies}"
-}
-
-script::BuildScript()
-{
-  # Usage: BuildScript <in:name> <in:output_path>
-  local in_name=$1
-  # local in_output_path="$2"
-  # log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
-
-  # local script_dir="$(helper::GetScriptDir)"
-  local script_dir="/scripts_library"
-  local dependencies="$(script::GetScriptDependencies "${in_name}")"
-  local code=""
-  while read -r dependency; do
-    log::Log "info" "5" "Adding dependency" "${dependency}"
-    if [ "${dependency}" == "${in_name}" ]; then
-      log::Log "warning" "1" "Cyclic Dependencies" "Script: ${in_name} ; File: ${file_path}"
-      continue
-    fi
-
-    local file_path="${script_dir}/_${dependency}.sh"
-    if [ ! -f "${file_path}" ]; then
-      log::Log "warning" "1" "Could not find dependency file" "Script: ${in_name} ; File: ${file_path}"
-      continue
-		fi
-
-    printf -v "code" "%s\n\n#### ${dependency} ####\n\n%s\n" "${code}" "$(cat "${file_path}" )"
-	done <<< "${dependencies}"
-
-  local file_path="${script_dir}/_${in_name}.sh"
-  printf -v "code" "%s\n\n#### ${in_name} ####\n\n%s\n" "${code}" "$(cat "${file_path}" )"
-
-  # if [ "${in_output_path}" == "" ]; then
-    echo "${code}"
-    return 0
-  # fi
-
-  # echo "${code}" > "${in_output_path}"
 }
 
 script::GetOutFilePath()
@@ -491,56 +432,9 @@ script::ExecScript()
   local in_command_id=$1
   shift 1
 
-  # local index=0
-  # local commands[$index]="#! /bin/bash"
-  # local scripts[$index]="log"
-  # index=$((index+1))
-  # commands[$index]="trap \"echo $(script::GetExitModeString)\" EXIT"
-  # scripts[$index]=""
-  # index=$((index+1))
-  # commands[$index]="script__command_id=${in_command_id}"
-  # scripts[$index]=""
-  #
-  # local current_command=""
-  # while [[ $# != 0 ]]; do
-  #     case $1 in
-  #         -*)
-  #           index=$((index+1))
-  #           commands[$index]="$(script::GetCommand "$@")"
-  #           scripts[$index]="$(script::GetScriptFromCommand "${commands[$index]}")"
-  #           ;;
-  #         *)
-  #             ;;
-  #     esac
-  #     shift 1
-  # done
-  #
-  # local scripts_to_load="${scripts[0]}"
-  # for script in "${scripts[@]:1}"; do
-  #   if [ "${script}" == "" ]; then 
-  #     continue
-  #   fi
-  #
-  #   printf -v "scripts_to_load" '"%s" "%s"' "${scripts_to_load}" "${script}"
-  # done
-  #
-  # local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
-  # echo "${commands[0]}" > "${exec_script_path}"
-  # script::BuildScript "script_tests" >> "${exec_script_path}"
-  # for script in "${commands[@]:1}"; do
-  #   echo "${script}" >> "${exec_script_path}"
-  # done
-  #
-  # echo "echo \"${scripts_to_load}\"" >> "${exec_script_path}"
-
   local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
-
   local config="$(script::CommandLineToOptionsConfig "$@")"
   echo "$config" | script::BuildScriptFromConfig "${in_command_id}" "${exec_script_path}"
-
-  # local t1="$(cat "${exec_script_path}")"
-  # local t1="${exec_script_path}"
-  # echo "echo \'"${t1}"\'  " >> "${exec_script_path}"
 
   local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
   [ -p "${out_file_path}"  ] || mkfifo "${out_file_path}";
