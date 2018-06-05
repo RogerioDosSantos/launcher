@@ -105,6 +105,25 @@ runner::RunCommand()
   echo "${command_id}"
 }
 
+runner::Debug()
+{
+  # Usage <in:output_path> <in:code>
+  local in_output_path=$1
+  local in_code=$2
+
+  # echo "$LINENO - Instruction=${in_code}"
+  echo "#!/bin/bash" > "${in_output_path}"
+  echo "main(){" >> "${in_output_path}"
+  echo " " >> "${in_output_path}"
+  echo " " >> "${in_output_path}"
+  echo "${in_code}" >> "${in_output_path}"
+  echo " " >> "${in_output_path}"
+  echo " " >> "${in_output_path}"
+  echo "}" >> "${in_output_path}"
+  echo "main" >> "${in_output_path}"
+  # echo "$LINENO - - - "
+}
+
 runner::Runner()
 {
   # echo "$(docker::IsVirtualBox)"
@@ -134,12 +153,9 @@ runner::Runner()
   fi
 
   while [ true ]; do
-    local activity=$(runner::RunCommand "${container_name}" -gi "${command_id}")
-    # echo "$LINENO - Instruction=${activity}"
-    # echo "$LINENO - - - "
-    eval "${activity}"
-    # runner::RunCommand "${container_name}" -ai "${command_id}" "script_command_answer"
-    # echo "$LINENO - - - "
+    local instruction=$(runner::RunCommand "${container_name}" -gi "${command_id}")
+    # runner::Debug "${in_caller_dir}/host_command.sh" "${instruction}"
+    eval "${instruction}"
   done 
 }
 
