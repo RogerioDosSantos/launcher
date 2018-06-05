@@ -6,4 +6,5 @@
  "--log_show" "-ls" "log::ShowLog" "0" "--log_show (-ls)" "Enable Log and show it at the end of the execution"
  "--log_level" "-ll" "log::SetLogLevel" "1" "--log_level (-ll) <level>" "Define the level of the log system [1 (default) to 5]"
  "--log_type" "-lt" "log::SetLogType" "1" "--log_type (-lt) <type>" "Define the verbosity of the log system. Options: error (default), warning, info"
+ "--run_function" "-rf" "script::RunFunction" "1" "--run_function (-rf) <parameters>..." "Execute the function informed."
   

@@ -131,8 +131,9 @@ script::GetScriptDependencies1()
 
 script::BuildScriptFromConfig()
 {
-  # Usage: <config> | BuildScriptFromConfig <in:out_file_path>
-  local in_out_file_path=$1
+  # Usage: <config> | BuildScriptFromConfig <in:command_id> <in:out_file_path>
+  local in_command_id=$1
+  local in_out_file_path=$2
 
   local commands=()
   local scripts=()
@@ -169,7 +170,9 @@ script::BuildScriptFromConfig()
     done <<< "${dependencies}"
   done
 
-  # echo '#! /bin/bash' > "${in_out_file_path}"
+  echo '#! /bin/bash' > "${in_out_file_path}"
+  echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${in_out_file_path}"
+  echo "script__command_id=${in_command_id}" >> "${in_out_file_path}"
   for script in "${scripts[@]}"; do
     local script_file_path="/scripts/_${script}.sh"
     # echo "$LINENO - ${script_file_path}"
@@ -278,58 +281,6 @@ script::BuildScript()
 
   # echo "${code}" > "${in_output_path}"
 }
-
-# script::RunScript()
-# {
-#   # Usage RunScript <in:script_function> <in:script_parameters>...
-#   local in_script_function="$1"
-#   local in_script_parameters="$2"
-#   log::Log "info" "5" "Parameters" "Function: ${in_script_function} ; Commands: ${in_script_parameters}"
-#
-#   # local c1="sleep 15; echo 'finished 01'"
-#   # local c2="sleep 20; echo 'finished 02'"
-#   # local c3="sleep 25; echo 'finished 03'"
-#   # local status="while sleep 1; do echo \"still running\" ; done"
-#   # eval "${c1}" > "/session/c1.result" & pid1=$!
-#   # eval "${status}" & pids=$!
-#   # wait $pid1
-#   # kill $pids
-#
-#   local script_name="$(echo "${in_script_function}" | cut -d: -f1)"
-#   local id="${script_name}_$(date +%s%N)"
-#   local script_path="/session/${id}.sh"
-#   local output_path="/session/${id}.out"
-#   local pid_path="/session/${id}.pid"
-#   log_config_file_path="/session/${id}.log"
-#
-#   if [ "${script_config_debug}" == "1" ]; then
-#     log::Log "info" "5" "Debug: Dumping code to file" "${debug_script_path}"
-#     echo "${full_script}" > "${debug_script_path}"
-#     echo "${in_script_function} ${in_script_parameters}" >> "${debug_script_path}"
-#     return 0
-#   fi
-#
-#   script::BuildScript "${script_name}" > ${script_path} 2> "${output_path}"
-#   echo "${in_script_function} ${in_script_parameters}" >> "${script_path}"
-#   /bin/bash -c "${script_path}" &> "${output_path}" &
-#   echo $! > ${pid_path}
-#   echo "${id}"
-#   
-#   # local full_script="$(script::BuildScript "${script_name}")"
-#   #
-#   # # echo $(echo "${full_script}" | grep "json::VarsToJson()")
-#   # eval "${full_script}"
-#   # eval "${in_script_function} ${in_script_parameters}"
-# }
-
-# script::RunTest()
-# {
-#   # Usage RunTest <in:test_name>
-#   local in_test_name=$1
-#
-#   local script_name="$(echo "${in_test_name}" | cut -d: -f1)"
-#   script::RunScript "${script_name}::Run" "${in_test_name}"
-# }
 
 script::GetOutFilePath()
 {
@@ -547,5 +498,20 @@ script::ExecScript()
   local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
   [ -p "${out_file_path}"  ] || mkfifo "${out_file_path}";
   /bin/bash "${exec_script_path}" 2>&1 | script::SendInstructions "${in_command_id}"
+}
+
+script::Help()
+{
+  # TODO (Roger) 
+  echo "Help Called"
+}
+
+script::RunFunction()
+{
+  # Usage RunFunction <in:function_name> <in_parameters>...
+  local in_function_name=$1
+  shift 1
+
+  echo "$LINENO - ${in_function_name}"
 }
 

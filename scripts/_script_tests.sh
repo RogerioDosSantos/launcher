@@ -83,6 +83,10 @@ script_tests::GetScriptDependencies1()
 
 script_tests::BuildScriptFromConfig()
 {
-  local config="$(script::CommandLineToOptionsConfig -ls -le -rt "script_tests::CommandLineToOptionsConfig")"
-  echo "$config" | script::BuildScriptFromConfig "/quality/.temp_script.sh"
+  # local config="$(script::CommandLineToOptionsConfig -ls -le -rt "script_tests::CommandLineToOptionsConfig")"
+  # local config="$(script::CommandLineToOptionsConfig -h)"
+  local config="$(script::CommandLineToOptionsConfig -rf "script::Help")"
+  echo "$config" | script::BuildScriptFromConfig "command_id" "/quality/.temp_script.sh"
+  /quality/.temp_script.sh
+  rm /quality/.temp_script.sh
 }
