@@ -27,8 +27,8 @@ qa::Run()
     return 0
   fi
 
-  local test_file_path="./_${test_name}.sh"
-  source "${test_file_path}"
+  # local test_file_path="./_${test_name}.sh"
+  # source "${test_file_path}"
 
   qa::Init "${test_name}"
   if [ "${test_function}" != "" ]; then

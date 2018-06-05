@@ -118,9 +118,12 @@ script::GetScriptDependencies1()
   local dependencies=("${in_script_name}")
   local dependency_file_path="/scripts_library/_${in_script_name}.dep"
   if [ ! -f "${dependency_file_path}" ]; then
-    log::Log "error" "1" "File does not exist" "${in_file_path}"
-    echo "${in_script_name}"
-    return 0
+    dependency_file_path="/scripts/_${in_script_name}.dep"
+    if [ ! -f "${dependency_file_path}" ]; then
+      log::Log "error" "1" "File does not exist" "${in_file_path}"
+      echo "${in_script_name}"
+      return 0
+    fi
   fi
 
   dependencies+=($@)
