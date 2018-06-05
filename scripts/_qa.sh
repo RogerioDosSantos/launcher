@@ -67,6 +67,10 @@ qa::AddTestResult()
   echo "${in_expected}" >> "${qa_config_temp_test_file}"
   echo " - Current:" >> "${qa_config_temp_test_file}"
   echo "${in_current}" >> "${qa_config_temp_test_file}"
+  
+  local difference="$(diff  <(echo "${in_expected}" ) <(echo "${in_current}"))"
+  echo " - Difference:" >> "${qa_config_temp_test_file}"
+  echo "${difference}" >> "${qa_config_temp_test_file}"
 }
 
 qa::AreEqual()
