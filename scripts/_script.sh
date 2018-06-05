@@ -138,9 +138,16 @@ script::BuildScriptFromConfig()
   local commands=()
   local scripts=()
   local input=""
+
+
   while true; do
-    read input
-    if [ "$?" != "0" ]; then
+    # read input
+    # if [ "$?" != "0" ]; then
+    #   break;
+    # fi
+
+    input=$(/bin/bash -c 'read input; echo $input')
+    if [ "${input}" == "" ]; then
       break;
     fi
 
@@ -154,7 +161,7 @@ script::BuildScriptFromConfig()
 
     local exec_command="${exec_function} ${exec_parameter}"
     commands+=("${exec_command}")
-    
+
     local script_name="$(script::GetScriptFromCommand "${exec_command}")"
     if [[ "${scripts[*]}" == *"${script_name}"* ]]; then
 			continue
@@ -168,7 +175,11 @@ script::BuildScriptFromConfig()
 
       scripts+=("${dependency}")
     done <<< "${dependencies}"
+
   done
+
+  # echo "echo 'T1: "${scripts[@]}" '" >> "${in_out_file_path}"
+  # return 0
 
   echo '#! /bin/bash' > "${in_out_file_path}"
   echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${in_out_file_path}"
@@ -453,47 +464,56 @@ script::ExecScript()
   local in_command_id=$1
   shift 1
 
-  local index=0
-  local commands[$index]="#! /bin/bash"
-  local scripts[$index]="log"
-  index=$((index+1))
-  commands[$index]="trap \"echo $(script::GetExitModeString)\" EXIT"
-  scripts[$index]=""
-  index=$((index+1))
-  commands[$index]="script__command_id=${in_command_id}"
-  scripts[$index]=""
-
-  local current_command=""
-  while [[ $# != 0 ]]; do
-      case $1 in
-          -*)
-            index=$((index+1))
-            commands[$index]="$(script::GetCommand "$@")"
-            scripts[$index]="$(script::GetScriptFromCommand "${commands[$index]}")"
-            ;;
-          *)
-              ;;
-      esac
-      shift 1
-  done
-
-  local scripts_to_load="${scripts[0]}"
-  for script in "${scripts[@]:1}"; do
-    if [ "${script}" == "" ]; then 
-      continue
-    fi
-
-    printf -v "scripts_to_load" '"%s" "%s"' "${scripts_to_load}" "${script}"
-  done
+  # local index=0
+  # local commands[$index]="#! /bin/bash"
+  # local scripts[$index]="log"
+  # index=$((index+1))
+  # commands[$index]="trap \"echo $(script::GetExitModeString)\" EXIT"
+  # scripts[$index]=""
+  # index=$((index+1))
+  # commands[$index]="script__command_id=${in_command_id}"
+  # scripts[$index]=""
+  #
+  # local current_command=""
+  # while [[ $# != 0 ]]; do
+  #     case $1 in
+  #         -*)
+  #           index=$((index+1))
+  #           commands[$index]="$(script::GetCommand "$@")"
+  #           scripts[$index]="$(script::GetScriptFromCommand "${commands[$index]}")"
+  #           ;;
+  #         *)
+  #             ;;
+  #     esac
+  #     shift 1
+  # done
+  #
+  # local scripts_to_load="${scripts[0]}"
+  # for script in "${scripts[@]:1}"; do
+  #   if [ "${script}" == "" ]; then 
+  #     continue
+  #   fi
+  #
+  #   printf -v "scripts_to_load" '"%s" "%s"' "${scripts_to_load}" "${script}"
+  # done
+  #
+  # local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
+  # echo "${commands[0]}" > "${exec_script_path}"
+  # script::BuildScript "script_tests" >> "${exec_script_path}"
+  # for script in "${commands[@]:1}"; do
+  #   echo "${script}" >> "${exec_script_path}"
+  # done
+  #
+  # echo "echo \"${scripts_to_load}\"" >> "${exec_script_path}"
 
   local exec_script_path="$(script::GetScriptFilePath "${in_command_id}")"
-  echo "${commands[0]}" > "${exec_script_path}"
-  script::BuildScript "script_tests" >> "${exec_script_path}"
-  for script in "${commands[@]:1}"; do
-    echo "${script}" >> "${exec_script_path}"
-  done
 
-  echo "echo \"${scripts_to_load}\"" >> "${exec_script_path}"
+  local config="$(script::CommandLineToOptionsConfig "$@")"
+  echo "$config" | script::BuildScriptFromConfig "${in_command_id}" "${exec_script_path}"
+
+  # local t1="$(cat "${exec_script_path}")"
+  # local t1="${exec_script_path}"
+  # echo "echo \'"${t1}"\'  " >> "${exec_script_path}"
 
   local out_file_path="$(script::GetOutFilePath "${in_command_id}")"
   [ -p "${out_file_path}"  ] || mkfifo "${out_file_path}";

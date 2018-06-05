@@ -237,7 +237,7 @@ main::RunCommand()
     return 0
   fi
 
-  local id="fake_${RANDOM}"
+  local id="command_${RANDOM}"
   local status_file_path="/root/${id}.status"
   echo "working" > "${status_file_path}"
   script::ExecScript "${id}" "$@" &> "${status_file_path}" &
