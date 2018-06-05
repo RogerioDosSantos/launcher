@@ -81,6 +81,54 @@ script::GetElementFromCommandLine()
   # echo "$(echo "${input_list}" | sed "${in_element}q;d")"
 }
 
+script::GetScriptDependencies1()
+{
+  # Usage GetScriptDependencies1 <in:script_name> <current_dependencies>...
+  local in_script_name=$1
+  shift 1
+
+  if [[ "$*" == *"${in_script_name}"* ]]; then
+    return 0
+  fi
+
+  local dependencies=("${in_script_name}")
+  local dependency_file_path="/scripts/_${in_script_name}.dep"
+  if [ ! -f "${dependency_file_path}" ]; then
+    log::Log "error" "1" "File does not exist" "${in_file_path}"
+    echo "${in_script_name}"
+    return 0
+  fi
+
+  dependencies+=($@)
+  while read -r dependency; do
+    if [ "${dependency}" == "" ]; then
+      continue
+    fi
+
+    dependency="${dependency/source \".\/_/}"
+    dependency="${dependency/.sh\"/}"
+    if [[ "${dependencies[*]}" == *"${dependency}"* ]]; then
+			continue
+		fi
+
+    local additional_depencies="$(script::GetScriptDependencies1 "${dependency}" "${dependencies[@]}")"
+    while read -r additional_dependency; do
+      if [[ "${dependencies[*]}" == *"${additional_dependency}"* ]]; then
+        continue
+      fi
+
+      dependencies+=("${additional_dependency}")
+    done <<< "${additional_depencies}"
+
+  done <<< "$(cat "${dependency_file_path}")"
+
+  printf '%s\n' "${dependencies[@]}"
+
+  # local result=""
+  # printf -v "result" '%s\n' "${dependencies[@]}"
+  # echo "${result%?}"
+}
+
 script::BuildScriptFromConfig()
 {
   # Usage: <config> | BuildScriptFromConfig <in:out_file_path>
@@ -95,14 +143,36 @@ script::BuildScriptFromConfig()
       break;
     fi
 
-    printf '%s\n' "$LINENO - ${input}"
-    local exec_function="$(script::GetElementFromCommandLine "3" "${input}") "
-    local exec_parameter="$(script::GetElementFromCommandLine "7" "${input}") "
-    commands+=("${exec_function} ${exec_parameter}")
+    local exec_parameter="$(script::GetElementFromCommandLine "7" "${input}")"
+    if [ "${exec_parameter}" == "\"\"" ]; then 
+      exec_parameter=""
+    fi
 
+    local exec_function="$(script::GetElementFromCommandLine "3" "${input}")"
+    exec_function="${exec_function//\"/}"
+
+    local exec_command="${exec_function} ${exec_parameter}"
+    commands+=("${exec_command}")
+    
+    local script_name="$(script::GetScriptFromCommand "${exec_command}")"
+    if [[ "${scripts[*]}" == *"${script_name}"* ]]; then
+			continue
+		fi
+
+    local dependencies="$(script::GetScriptDependencies1 "${script_name}" "${scripts[@]}")"
+    while read -r dependency; do
+      if [[ "${scripts[*]}" == *"${dependency}"* ]]; then
+        continue
+      fi
+
+      scripts+=("${dependency}")
+    done <<< "${dependencies}"
   done
 
-  printf '%s\n' "$LINENO - ${commands[@]}"
+  local config_file_path="${script_dir}/_${in_script}.dep"
+  local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
+
+  printf '%s\n' "$LINENO - ${scripts[@]}"
 }
 
 script::GetDependencyFromConfig()

@@ -76,9 +76,14 @@ script_tests::GetElementFromCommandLine()
   script::GetElementFromCommandLine "7" '"--run_test" "-rt" "qa::Run" "1" "--run_test (-rt) <test_name>" "Execute the test informed." ""script_tests::CommandLineToOptionsConfig""' | qa::AreEqual "rt_command_get_parameters" "Could not get the proper element"
 }
 
+script_tests::GetScriptDependencies1()
+{
+  script::GetScriptDependencies1 "script_tests" 
+}
+
 script_tests::BuildScriptFromConfig()
 {
-  local config="$(script::CommandLineToOptionsConfig -ls -rt "script_tests::CommandLineToOptionsConfig")"
+  local config="$(script::CommandLineToOptionsConfig -ls -le -rt "script_tests::CommandLineToOptionsConfig")"
   # echo "$config"
   echo "$config" | script::BuildScriptFromConfig "/quality/.temp_script.sh"
   # echo "$config" #| script::BuildScriptFromConfig "/quality/.temp_script.sh"
