@@ -134,7 +134,7 @@ script::BuildScriptFromConfig()
   # Usage: <config> | BuildScriptFromConfig <in:out_file_path>
   local in_out_file_path=$1
 
-  local commands=('#! /bin/bash')
+  local commands=()
   local scripts=()
   local input=""
   while true; do
@@ -169,10 +169,19 @@ script::BuildScriptFromConfig()
     done <<< "${dependencies}"
   done
 
-  local config_file_path="${script_dir}/_${in_script}.dep"
-  local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
+  # echo '#! /bin/bash' > "${in_out_file_path}"
+  for script in "${scripts[@]}"; do
+    local script_file_path="/scripts/_${script}.sh"
+    # echo "$LINENO - ${script_file_path}"
+    echo "#### ${script} ####" >> ${in_out_file_path}
+    cat "${script_file_path}" >> ${in_out_file_path}
+  done
 
-  printf '%s\n' "$LINENO - ${scripts[@]}"
+  echo "#### MAIN ####" >> "${in_out_file_path}"
+  for command in "${commands[@]}"; do
+    echo "${command}" >> "${in_out_file_path}"
+    # echo "$LINENO - ${command}"
+  done
 }
 
 script::GetDependencyFromConfig()

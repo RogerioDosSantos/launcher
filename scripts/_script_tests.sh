@@ -84,8 +84,5 @@ script_tests::GetScriptDependencies1()
 script_tests::BuildScriptFromConfig()
 {
   local config="$(script::CommandLineToOptionsConfig -ls -le -rt "script_tests::CommandLineToOptionsConfig")"
-  # echo "$config"
   echo "$config" | script::BuildScriptFromConfig "/quality/.temp_script.sh"
-  # echo "$config" #| script::BuildScriptFromConfig "/quality/.temp_script.sh"
-
 }
