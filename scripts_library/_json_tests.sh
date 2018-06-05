@@ -1,35 +1,4 @@
 
-json_tests::Run()
-{
-  # Usage Run <in:test_name>
-  local in_test_name=$1
-  qa::Run "${in_test_name}"
-}
-
-# json_tests::Run()
-# {
-#   # Usage [<in:test_to_run>]
-#   local in_test_to_run="$1" 
-#   log::Log "info" "5" "in_test_to_run" "${in_test_to_run}"
-#   qa::Init "json"
-#   if [ "${in_test_to_run}" != "all" ]; then
-#     eval "json_tests::${in_test_to_run}"
-#     qa::End
-#     return 0
-#   fi
-#
-#   local function_list="$(declare -F | grep json_tests::)"
-#   echo " ${function_list}" | while read -r function_name; do
-#     if [[ ${function_name} = *"json_tests::Run"* ]]; then
-#       continue
-#     fi
-#     function_name=" ${function_name/declare -f/}"
-#     eval "${function_name}"
-# 	done
-#
-#   qa::End
-# }
-
 json_tests::VarsToJson()
 {
   # echo "This is cool" | qa::AreEqual "basic_test" "Could not validate basic_test"
@@ -44,3 +13,15 @@ json_tests::VarsToJson()
   json::VarsToJson weird_chars | qa::AreEqual "weird_chars" "Could not support weird charecters."
 }
 
+json_tests::IsValid()
+{
+  json::IsValid '{"n1":"v1", "n2":"v2"}' | qa::AreEqual "simple_validation" "Json was not validated properly"
+  json::IsValid '{"n1:"v1", "n2":"v2"}' | qa::AreEqual "missing_quote" "Json was not validated properly"
+  json::IsValid '{"n1":"v1" "n2":"v2"}' | qa::AreEqual "missing_comma" "Json was not validated properly"
+}
+
+json_tests::GetValue()
+{
+  json::GetValue '{"n1":"v1", "n2":"v2"}' 'n1' | qa::AreEqual "getiing_n1" "Could not get value"
+  json::GetValue '{"n1":"v1", "n2":"v2"}' 'non-existent' | qa::AreEqual "getting_non_existent" "Could get an unexistent value"
+}
