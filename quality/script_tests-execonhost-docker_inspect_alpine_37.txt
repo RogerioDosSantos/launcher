@@ -69,8 +69,12 @@
 "Size": 4147781,
 "VirtualSize": 4147781,
 "GraphDriver": {
-"Data": null,
-"Name": "aufs"
+"Data": {
+"MergedDir": "/var/lib/docker/overlay2/bf2cc0ba16e6400ac04a80cd877ab4839a5019f6935364687845ff7618857c17/merged",
+"UpperDir": "/var/lib/docker/overlay2/bf2cc0ba16e6400ac04a80cd877ab4839a5019f6935364687845ff7618857c17/diff",
+"WorkDir": "/var/lib/docker/overlay2/bf2cc0ba16e6400ac04a80cd877ab4839a5019f6935364687845ff7618857c17/work"
+},
+"Name": "overlay2"
 },
 "RootFS": {
 "Type": "layers",
