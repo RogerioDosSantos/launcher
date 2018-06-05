@@ -9,13 +9,13 @@ MAINTAINER Roger Santos (http://rogeriodossantos.github.io)
 WORKDIR /root/
 
 RUN mkdir -p /work \
-      mkdir -p /scripts \
+      mkdir -p /scripts_library \
       mkdir -p /doc \
       mkdir -p /quality 
 
-COPY ./scripts /scripts
+COPY ./scripts_library /scripts_library
 COPY ./quality /quality
 COPY ./doc /doc
 
-# ENTRYPOINT ["/scripts/main.sh"]
+# ENTRYPOINT ["/scripts_library/main.sh"]
 ENTRYPOINT ["/bin/bash"]

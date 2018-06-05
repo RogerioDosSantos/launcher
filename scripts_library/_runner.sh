@@ -60,11 +60,11 @@ runner::StartContainer()
   if [ "${in_execution_type}" == "debug" ]; then
     local docker_work_dir=$(docker::NormalizeDir "${workspace_dir}/debug/work")
     local docker_session_dir=$(docker::NormalizeDir "${workspace_dir}/debug/session")
-    local docker_scripts_dir=$(docker::NormalizeDir "${workspace_dir}/scripts")
+    local docker_scripts_dir=$(docker::NormalizeDir "${workspace_dir}/scripts_library")
     local docker_doc_dir=$(docker::NormalizeDir "${workspace_dir}/doc")
     local docker_quality_dir=$(docker::NormalizeDir "${workspace_dir}/quality")
     local image_name="${in_image_name}_base"
-    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -e CONTAINER_NAME=\"${in_container_name}\" -v ${docker_work_dir}:/work -v ${docker_session_dir}:/session -v ${docker_scripts_dir}:/scripts -v ${docker_doc_dir}:/doc -v ${docker_quality_dir}:/quality ${image_name} -se"
+    shell_command="docker run -d -it --rm --name \"${in_container_name}\" -e CONTAINER_NAME=\"${in_container_name}\" -v ${docker_work_dir}:/work -v ${docker_session_dir}:/session -v ${docker_scripts_dir}:/scripts_library -v ${docker_doc_dir}:/doc -v ${docker_quality_dir}:/quality ${image_name} -se"
   else
     local docker_work_dir=$(docker::NormalizeDir "${caller_dir}")
     local image_name="${in_image_name}"
@@ -99,7 +99,7 @@ runner::RunCommand()
   local container_name=$1
   shift 1
 
-  local shell_command="docker exec "${container_name}" /bin/bash -c \"/scripts/main.sh $@\""
+  local shell_command="docker exec "${container_name}" /bin/bash -c \"/scripts_library/main.sh $@\""
   log::Log "info" "5" "Execution shell" "${shell_command}"
   command_id=$(/bin/bash -c "${shell_command}")
   echo "${command_id}"

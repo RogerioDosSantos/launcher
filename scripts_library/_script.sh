@@ -6,7 +6,7 @@ script::GetCommandConfig()
   local in_command=$1
   shift 1
 
-  echo "$(cat /scripts/_command_config | grep -w "\"${in_command/-/\\-}"\")"
+  echo "$(cat /scripts_library/_command_config | grep -w "\"${in_command/-/\\-}"\")"
 }
 
 script::CommandLineToOptionsConfig()
@@ -50,7 +50,7 @@ script::GetCommand()
   local old_ifs=$IFS
   IFS=$'\n'
 
-	local configs=( $(xargs -n1 <<<"$(cat /scripts/_command_table | grep -w "${in_command/-/\\-}")") )
+	local configs=( $(xargs -n1 <<<"$(cat /scripts_library/_command_table | grep -w "${in_command/-/\\-}")") )
   IFS=${old_ifs}
 
   local command_to_run="${configs[0]}"
@@ -110,7 +110,7 @@ script::GetScriptDependencies1()
   fi
 
   local dependencies=("${in_script_name}")
-  local dependency_file_path="/scripts/_${in_script_name}.dep"
+  local dependency_file_path="/scripts_library/_${in_script_name}.dep"
   if [ ! -f "${dependency_file_path}" ]; then
     log::Log "error" "1" "File does not exist" "${in_file_path}"
     echo "${in_script_name}"
@@ -212,7 +212,7 @@ script::BuildScriptFromConfig()
   echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${in_out_file_path}"
   echo "script__command_id=${in_command_id}" >> "${in_out_file_path}"
   for script in "${scripts[@]}"; do
-    local script_file_path="/scripts/_${script}.sh"
+    local script_file_path="/scripts_library/_${script}.sh"
     # echo "$LINENO - ${script_file_path}"
     echo "#### ${script} ####" >> ${in_out_file_path}
     cat "${script_file_path}" >> ${in_out_file_path}
@@ -263,7 +263,7 @@ script::GetScriptDependencies()
   log::Log "info" "5" "in_script" "${in_script}"
 
   # local script_dir="$(helper::GetScriptDir)"
-  local script_dir="/scripts"
+  local script_dir="/scripts_library"
   local config_file_path="${script_dir}/_${in_script}.dep"
   local file_dependencies="$(script::GetDependencyFromConfig "${config_file_path}")"
   printf -v "file_dependencies" '%s\n%s' "${in_script}" "${file_dependencies}"
@@ -290,7 +290,7 @@ script::BuildScript()
   # log::Log "info" "5" "Parameters" "Name: ${in_name} ; Output: ${in_output_path}"
 
   # local script_dir="$(helper::GetScriptDir)"
-  local script_dir="/scripts"
+  local script_dir="/scripts_library"
   local dependencies="$(script::GetScriptDependencies "${in_name}")"
   local code=""
   while read -r dependency; do

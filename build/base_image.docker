@@ -15,4 +15,4 @@ RUN apt-get update \
              lynx \
 	&& apt-get autoclean
 					
-ENTRYPOINT ["/scripts/main.sh"]
+ENTRYPOINT ["/scripts_library/main.sh"]
