@@ -81,13 +81,31 @@ script::GetElementFromCommandLine()
   # echo "$(echo "${input_list}" | sed "${in_element}q;d")"
 }
 
+script::HasInArray()
+{
+  # Usage HasInArray <in:value> <in:array_elements>...
+  local in_value=$1
+  shift 1
+
+  while [[ $# != 0  ]]; do
+    if [ "$1" == "${in_value}" ]; then
+      echo "true"
+      return 0
+    fi
+
+    shift 1
+  done
+
+  echo "false"
+}
+
 script::GetScriptDependencies1()
 {
   # Usage GetScriptDependencies1 <in:script_name> <current_dependencies>...
   local in_script_name=$1
   shift 1
 
-  if [[ "$*" == *"${in_script_name}"* ]]; then
+  if [ "$(script::HasInArray "${in_script_name}" "$@")" == "true" ]; then
     return 0
   fi
 
@@ -105,15 +123,23 @@ script::GetScriptDependencies1()
       continue
     fi
 
-    dependency="${dependency/source \".\/_/}"
     dependency="${dependency/.sh\"/}"
-    if [[ "${dependencies[*]}" == *"${dependency}"* ]]; then
+    dependency="${dependency/source \".\/_/}"
+    if [ "$(script::HasInArray "${dependency}" "${dependencies[@]}")" == "true" ]; then
 			continue
 		fi
 
+  # echo "$LINENO - ${dependency} "
+  # return 0
+
+
+
+
     local additional_depencies="$(script::GetScriptDependencies1 "${dependency}" "${dependencies[@]}")"
+
+    # dependencies+=("${dependency}")
     while read -r additional_dependency; do
-      if [[ "${dependencies[*]}" == *"${additional_dependency}"* ]]; then
+      if [ "$(script::HasInArray "${additional_dependency}" "${dependencies[@]}")" == "true" ]; then
         continue
       fi
 
@@ -163,13 +189,13 @@ script::BuildScriptFromConfig()
     commands+=("${exec_command}")
 
     local script_name="$(script::GetScriptFromCommand "${exec_command}")"
-    if [[ "${scripts[*]}" == *"${script_name}"* ]]; then
+    if [ "$(script::HasInArray "${script_name}" "${scripts[@]}")" == "true" ]; then
 			continue
 		fi
 
     local dependencies="$(script::GetScriptDependencies1 "${script_name}" "${scripts[@]}")"
     while read -r dependency; do
-      if [[ "${scripts[*]}" == *"${dependency}"* ]]; then
+      if [ "$(script::HasInArray "${dependency}" "${scripts[@]}")" == "true" ]; then
         continue
       fi
 
@@ -178,6 +204,7 @@ script::BuildScriptFromConfig()
 
   done
 
+  # echo "trap \"echo $(script::GetExitModeString)\" EXIT" >> "${in_out_file_path}"
   # echo "echo 'T1: "${scripts[@]}" '" >> "${in_out_file_path}"
   # return 0
 
