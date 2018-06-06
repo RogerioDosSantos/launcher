@@ -65,16 +65,29 @@ builder::BuildCmake ()
   local cmake_file_dir="${in_cmake_file_path%/*}"
   local project_metadata=$(builder::CreateProjectMetadata "${cmake_file_dir}" "${in_platform}" "${in_flavor}")
   local project_name="$(json::GetValue "${project_metadata}" 'name')"
-  local build_dir="${cmake_file_dir}/build/${project_name}/${in_platform}-${in_flavor}"
+  local full_name="$(json::GetValue "${project_metadata}" 'full_name')"
+  local build_dir="${cmake_file_dir}/build/${in_platform}-${in_flavor}"
+
 
   local git_result="$(script::ExecOnHost "true" "
-    mkdir -p '${build_dir}' ;
-    echo "t1"
-    echo '${project_metadata}' > '${build_dir}/build_info.json'
+    echo '*** Creating Build directory and build information:'
+    echo '- Build Directory: ${build_dir}'
+    mkdir -p ${build_dir} ;
+    echo '${project_metadata}' > ${build_dir}/build.json
+    echo '#!/bin/bash' > ${build_dir}/build.sh
+    echo 'cd \"\$(dirname \"\$0\")\"' >> ${build_dir}/build.sh
+    echo 'cmake ../.. -DCMAKE_INSTALL_PREFIX=../../../stage/' >> ${build_dir}/build.sh
+    echo 'cmake --build . --config RelWithDebInfo --clean-first --target install' >> ${build_dir}/build.sh
+    echo '*** Staging and Building ${full_name}:'
+    cd "${cmake_file_dir}/.."
+    workspace_dir=\"\$(pwd -P)\"
+    echo \"- Workspace Directory: \${workspace_dir}\"
+    builder-linux-x86 ./hardware_validator/build/linux-x86-release/build.sh
+    echo '*** Deploying ${full_name}:'
   ")"
 
-  # echo "$LINENO - ${project_name}"
-  # return 0
+  echo "$LINENO - ${build_dir}"
+  return 0
 
   echo "true"
 
