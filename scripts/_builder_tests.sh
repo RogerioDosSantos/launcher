@@ -15,5 +15,6 @@ builder_tests::CreateProjectMetadata()
 
 builder_tests::BuildCmake()
 {
-  builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-x86" "release"
+  # builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-x86" "release"
+  builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "i686-linux-gnu" "release"
 }
