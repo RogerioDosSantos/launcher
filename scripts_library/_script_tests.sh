@@ -17,9 +17,9 @@ script_tests::ExecOnHost()
   script::ExecOnHost "true" 'if [[ "$(docker images -q alpine:2.6 2> /dev/null)" == "" ]]; then docker pull alpine:2.6; fi' > /dev/null
   script::ExecOnHost "true" 'if [[ "$(docker images -q alpine:3.7 2> /dev/null)" == "" ]]; then docker pull alpine:3.7; fi' > /dev/null
   script::ExecOnHost "true" 'if [[ "$(docker images -q alpine/git:1.0.3 2> /dev/null)" == "" ]]; then docker pull alpine/git:1.0.3; fi' > /dev/null
-  script::ExecOnHost "false" "docker inspect alpine:2.6" | qa::AreEqual "docker_inspect_alpine_26" "Could not execute docker command properly"
-  script::ExecOnHost "false" "docker inspect alpine:3.7" | qa::AreEqual "docker_inspect_alpine_37" "Could not execute docker command properly"
-  script::ExecOnHost "false" "docker inspect alpine/git:1.0.3" | qa::AreEqual "docker_inspect_alpine_git_103" "Could not execute docker command properly"
+  script::ExecOnHost "false" "docker inspect alpine:2.6" | grep 'alpine' | qa::AreEqual "docker_inspect_alpine_26" "Could not execute docker command properly"
+  script::ExecOnHost "false" "docker inspect alpine:3.7" | grep 'alpine' | qa::AreEqual "docker_inspect_alpine_37" "Could not execute docker command properly"
+  script::ExecOnHost "false" "docker inspect alpine/git:1.0.3" | grep 'maintainer' | qa::AreEqual "docker_inspect_alpine_git_103" "Could not execute docker command properly"
   script::ExecOnHost "false" "docker run --rm alpine/git:1.0.3 --version" | qa::AreEqual "docker_git_version_103" "Could not run docker image properly"
 }
 
