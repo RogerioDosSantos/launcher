@@ -57,8 +57,25 @@ builder::CreateProjectMetadata()
 
 builder::BuildCmake ()
 {
-  # Usage: BuildCmake <in:cmake_file_path>
+  # Usage: BuildCmake <in:cmake_file_path> <in:project_dir> <in:platform> <in:flavor>
   local in_cmake_file_path=$1
+  local in_platform=$2
+  local in_flavor=$3
+  
+  local cmake_file_dir="${in_cmake_file_path%/*}"
+  local project_metadata=$(builder::CreateProjectMetadata "${cmake_file_dir}" "${in_platform}" "${in_flavor}")
+  local project_name="$(json::GetValue "${project_metadata}" 'name')"
+  local build_dir="${cmake_file_dir}/build/${project_name}/${in_platform}-${in_flavor}"
 
-  echo "$LINENO - ${in_cmake_file_path}"
+  local git_result="$(script::ExecOnHost "true" "
+    mkdir -p '${build_dir}' ;
+    echo "t1"
+    echo '${project_metadata}' > '${build_dir}/build_info.json'
+  ")"
+
+  # echo "$LINENO - ${project_name}"
+  # return 0
+
+  echo "true"
+
 }

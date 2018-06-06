@@ -392,7 +392,7 @@ script::ExecOnHost()
   if [ "${in_display}" == "true" ]; then
     commands[$index]=$(printf 'exec 5>&1 \n')
     index=$((index+1))
-    commands[$index]=$(printf 'local script_command_answer="$(%s | tee >(cat - >&5))" \n' "${in_command}")
+    commands[$index]=$(printf 'local script_command_answer="$((%s) | tee >(cat - >&5))" \n' "${in_command}")
     index=$((index+1))
   else
     commands[$index]=$(printf 'local script_command_answer="$(%s)" \n' "${in_command}")

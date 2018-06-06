@@ -106,23 +106,25 @@ runner::RunCommand()
   echo "${command_id}"
 }
 
+_debug_call_count=0
 runner::Debug()
 {
   # Usage <in:output_path> <in:code>
-  local in_output_path=$1
+  local in_output_dir=$1
   local in_code=$2
 
-  # echo "$LINENO - Instruction=${in_code}"
-  echo "#!/bin/bash" > "${in_output_path}"
-  echo "main(){" >> "${in_output_path}"
-  echo " " >> "${in_output_path}"
-  echo " " >> "${in_output_path}"
-  echo "${in_code}" >> "${in_output_path}"
-  echo " " >> "${in_output_path}"
-  echo " " >> "${in_output_path}"
-  echo "}" >> "${in_output_path}"
-  echo "main" >> "${in_output_path}"
-  # echo "$LINENO - - - "
+  local output_path="${in_output_dir}/debug_host_command_${_debug_call_count}.sh"
+  local return_file_prefix='/root/command'
+  echo "#!/bin/bash" > "${output_path}"
+  echo "main(){" >> "${output_path}"
+  echo " " >> "${output_path}"
+  echo " " >> "${output_path}"
+  echo "${in_code/${return_file_prefix}/${return_file_prefix}_debug}" >> "${output_path}"
+  echo " " >> "${output_path}"
+  echo " " >> "${output_path}"
+  echo "}" >> "${output_path}"
+  echo "main" >> "${output_path}"
+  _debug_call_count=$(expr $_debug_call_count + 1)
 }
 
 runner::Runner()
@@ -155,7 +157,7 @@ runner::Runner()
 
   while [ true ]; do
     local instruction=$(runner::RunCommand "${container_name}" -gi "${command_id}")
-    # runner::Debug "${in_caller_dir}/host_command.sh" "${instruction}"
+    # runner::Debug "${in_caller_dir}" "${instruction}"
     eval "${instruction}"
   done 
 }
