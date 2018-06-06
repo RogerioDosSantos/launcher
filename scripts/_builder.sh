@@ -104,7 +104,7 @@ builder::BuildCmake()
       echo \"- Workspace Directory: \${workspace_dir}\"
       echo '*** Staging and Building ${full_name}:'
       ${build_command}
-      ./build/builder/builder-${in_platform} ./${project_name}/${relative_build_dir}/build.sh
+      ./build/builder/${in_platform} ./${project_name}/${relative_build_dir}/build.sh
       echo '*** Deploying ${full_name}:'
     ")"
   done
