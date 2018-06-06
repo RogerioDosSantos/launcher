@@ -1,0 +1,1 @@
+  "full_name":"roger-projects-launcher-linux-x64-debug",

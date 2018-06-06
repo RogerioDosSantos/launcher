@@ -1,0 +1,1 @@
+  "full_name":"roger-projects-launcher-windows-x86-release",

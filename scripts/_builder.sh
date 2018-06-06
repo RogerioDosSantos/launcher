@@ -1,10 +1,12 @@
 
 builder::CreateProjectMetadata()
 {
-  # Usage: CreateProjectMetadata <in:project_dir>
+  # Usage: CreateProjectMetadata <in:project_dir> <in:platform> <in:flavor>
   local in_project_dir=$1
+  local in_platform=$2
+  local in_flavor=$3
 
-  script::ExecOnHost "false" "echo '*** Creating project metadata'"
+  # script::ExecOnHost "false" "echo '*** Creating project metadata'"
 
   local module_dir="$(script::ExecOnHost "false" "cd ${in_project_dir} ; git rev-parse --show-toplevel")"
   local git_result="$(script::ExecOnHost "false" "
@@ -26,6 +28,8 @@ builder::CreateProjectMetadata()
   ")"
 
   local name="${module_dir##*/}"
+  local platform="${in_platform}"
+  local flavor="${in_flavor}"
   local version="$(json::GetValue "${git_result}" 'version')"
   local commit="$(json::GetValue "${git_result}" 'commit')"
   local branch="$(json::GetValue "${git_result}" 'branch')"
@@ -42,13 +46,13 @@ builder::CreateProjectMetadata()
   local location="${module_dir/${upper_module_dir}/}"
   location="${location/${name}/}"
   location="${location::-1}"
-  local full_name="${upper_name}-${location}-${name}"
+  local full_name="${upper_name}-${location}-${name}-${platform}-${flavor}"
   local full_version="${upper_branch}-${upper_version}-${branch}-${version}"
   full_name=${full_name//\//-}
   full_name=${full_name/--/-}
   full_version=${full_version/--/-}
 
-  json::VarsToJson name version commit branch timestamp tag location upper_name upper_version upper_commit upper_branch upper_timestamp upper_tag upper_location full_name full_version
+  json::VarsToJson name platform flavor version commit branch timestamp tag location upper_name upper_version upper_commit upper_branch upper_timestamp upper_tag upper_location full_name full_version
 }
 
 builder::BuildCmake ()
