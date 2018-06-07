@@ -23,6 +23,14 @@ builder_tests::BuildCmake()
   # builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-x86" "all"
 }
 
+builder_tests::GetFullImageName()
+{
+  builder::GetFullImageName 'image_name' 'image_version' 'server' | qa::AreEqual "basic_with_server" "Wrong image name"
+  builder::GetFullImageName 'image_name' 'image_version' '' | qa::AreEqual "basic_without_server" "Wrong image name"
+  builder::GetFullImageName 'image_name' 'image_version' | qa::AreEqual "basic_without_server" "Wrong image name"
+  builder::GetFullImageName "builder-linux-armv5" "latest" "devindusoft.azurecr.io" | qa::AreEqual "armv5_latest" "Wrong image name" 
+}
+
 builder_tests::IsImageAvailable()
 {
   local password=$(cat /quality/.temp_docker_registry_password)

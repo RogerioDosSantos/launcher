@@ -1,0 +1,1 @@
+server/image_name:image_version

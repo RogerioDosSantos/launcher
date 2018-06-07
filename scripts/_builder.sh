@@ -123,6 +123,21 @@ builder::BuildCmake()
   done
 }
 
+builder::GetFullImageName()
+{
+  # Usage: GetFullImageName <in:image_name> <in:image_version> [<in:server>]
+  local in_image_name=$1
+  local in_image_version=$2
+  local in_server=$3
+
+  if [ "${in_server}" == "" ]; then
+    echo "${in_image_name}:${in_image_version}"
+    return 0
+  fi
+
+  echo "${in_server}/${in_image_name}:${in_image_version}"
+}
+
 builder::IsImageAvailable()
 {
   # Usage: IsImageAvailable <in:image_name> <in:image_version> [<in:server> [<in:user> <in:password>]]
@@ -132,11 +147,7 @@ builder::IsImageAvailable()
   local in_user=$4
   local in_password=$5
 
-  local image_full_name="${in_server}/${in_image_name}:${in_image_version}"
-  if [ "${in_server}" == "" ]; then
-    image_full_name="${in_image_name}:${in_image_version}"
-  fi
-
+  local image_full_name="$(builder::GetFullImageName "${in_image_name}" "${in_image_version}" "${in_server}")"
   local command_login="docker login --username ${in_user} --password ${in_password} devindusoft.azurecr.io"
   if [ "${in_user}" == "" ]; then
     command_login="echo ''"
