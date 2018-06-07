@@ -15,7 +15,9 @@ builder_tests::CreateProjectMetadata()
 
 builder_tests::BuildCmake()
 {
-  # builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-x86" "release"
-  builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-armv7" "all"
-  builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-x86" "all"
+  # builder::BuildCmake "~/indusoft/projects/boost/CMakeLists.txt" "linux-x86" "debug"
+  # builder::BuildCmake "~/indusoft/projects/boost/CMakeLists.txt" "linux-x86" "release"
+  builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-x86" "release"
+  # builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-armv7" "all"
+  # builder::BuildCmake "~/indusoft/projects/hardware_validator/CMakeLists.txt" "linux-x86" "all"
 }

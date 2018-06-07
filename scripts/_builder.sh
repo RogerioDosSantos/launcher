@@ -51,8 +51,9 @@ builder::CreateProjectMetadata()
   full_name=${full_name//\//-}
   full_name=${full_name/--/-}
   full_version=${full_version/--/-}
+  build_timestamp="$(date --utc +%FT%T.%3NZ)"
 
-  json::VarsToJson name platform flavor version commit branch timestamp tag location upper_name upper_version upper_commit upper_branch upper_timestamp upper_tag upper_location full_name full_version
+  json::VarsToJson name platform flavor version commit branch timestamp tag location upper_name upper_version upper_commit upper_branch upper_timestamp upper_tag upper_location full_name full_version build_timestamp
 }
 
 builder::BuildCmake()
@@ -71,7 +72,8 @@ builder::BuildCmake()
         ;;
       release)
         build_flavors+=('Release')
-        build_flavors+=('RelWithDebInfo')
+        #TODO(Roger) - Enable the code below so we can have debug info on every release
+        # build_flavors+=('RelWithDebInfo')
         ;;
       debug)
         build_flavors+=('Debug')
@@ -82,7 +84,6 @@ builder::BuildCmake()
 
   local cmake_file_dir="${in_cmake_file_path%/*}"
   for build_flavor in "${build_flavors[@]}"; do
-
     local project_metadata=$(builder::CreateProjectMetadata "${cmake_file_dir}" "${in_platform}" "${build_flavors,,}")
     local project_name="$(json::GetValue "${project_metadata}" 'name')"
     local full_name="$(json::GetValue "${project_metadata}" 'full_name')"
@@ -90,7 +91,7 @@ builder::BuildCmake()
     local build_dir="${cmake_file_dir}/${relative_build_dir}"
     local cmake_staging_parameters="-DCMAKE_BUILD_TYPE=${build_flavor} -DCMAKE_INSTALL_PREFIX=../../../stage/"
     local cmake_building_parameters="--config ${build_flavor} --clean-first --target install"
-    local git_result="$(script::ExecOnHost "true" "
+    local build_log="$(script::ExecOnHost "true" "
       echo '*** Creating Build directory and build information:'
       echo '- Build Directory: ${build_dir}'
       mkdir -p ${build_dir} ;
@@ -102,16 +103,22 @@ builder::BuildCmake()
       cd "${cmake_file_dir}/.."
       workspace_dir=\"\$(pwd -P)\"
       echo \"- Workspace Directory: \${workspace_dir}\"
-      echo '*** Staging and Building ${full_name}:'
+      echo '*** Building ${full_name}:'
       ${build_command}
       ./build/builder/${in_platform} ./${project_name}/${relative_build_dir}/build.sh
-      echo '*** Deploying ${full_name}:'
     ")"
+
+    local build_metadata="$(script::ExecOnHost "false" "
+      cd "${cmake_file_dir}/.."
+      cd "./stage/${in_platform,,}/${build_flavor,,}/${project_name,,}"
+      echo '${build_log}' > ./build_detail.log
+      cat ./build.json
+    ")"
+
+    if [ "$(json::GetValue "${build_metadata}" 'build_timestamp')" == "$(json::GetValue "${project_metadata}" 'build_timestamp')" ]; then
+      echo "[ ${full_name} ] - SUCCESS"
+    else
+      echo "[ ${full_name} ] - FAILED"
+    fi
   done
-
-  echo "$LINENO - ${build_dir}"
-  return 0
-
-  echo "true"
-
 }
