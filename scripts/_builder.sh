@@ -173,6 +173,7 @@ builder::Deploy()
   local full_name=$(json::GetValue "${build_metadata}" 'full_name')
   local full_version=$(json::GetValue "${build_metadata}" 'full_version')
   local docker_container_name="${in_server}/${function_name}:${full_version}"
+  builder::IsImageAvailable "${full_name}" "${full_version}" 
 
   echo "$LINENO - ${build_metadata}"
 

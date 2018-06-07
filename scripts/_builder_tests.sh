@@ -25,14 +25,16 @@ builder_tests::BuildCmake()
 
 builder_tests::IsImageAvailable()
 {
-  # TODO(Roger) - Implement a test with password
-  # builder::IsImageAvailable "builder-linux-armv5" "latest" "devindusoft.azurecr.io" "devindusoft" "<passwor>" 
-  builder::IsImageAvailable "alpine" "latest" | qa::AreEqual "existing_image_without_server" "Could not verify if image exist" 
-  builder::IsImageAvailable "builder-linux-armv5" "latest" "devindusoft.azurecr.io" | qa::AreEqual "existing_image_with_server" "Could not verify if image exist"
-  builder::IsImageAvailable "unexistent-image" "unexistent-version"  | qa::AreEqual "unexisting_image" "Could not verify if image exist"
+  local password=$(cat /quality/.temp_docker_registry_password)
+  builder::IsImageAvailable "builder-linux-armv5" "latest" "devindusoft.azurecr.io" "devindusoft" "${password}" | qa::AreEqual "existing_image" "Did not find an existing image (With: Server, User, Password)" 
+  builder::IsImageAvailable "alpine" "latest" | qa::AreEqual "existing_image" "Did not find an existing image (Without: Server)" 
+  builder::IsImageAvailable "builder-linux-armv5" "latest" "devindusoft.azurecr.io" | qa::AreEqual "existing_image" "Did not find an existing image (With: Server)"
+  builder::IsImageAvailable "unexistent-image" "unexistent-version" | qa::AreEqual "unexisting_image" "Found unexistent image"
 }
 
 builder_tests::Deploy()
 {
-  builder::Deploy "devindusoft.azurecr.io" "~/indusoft/projects/stage/linux-x86/release/hardware_validator/build.json"
+  local password=$(cat /quality/.temp_docker_registry_password)
+  # builder::IsImageAvailable "builder-linux-armv5" "latest" "devindusoft.azurecr.io" "devindusoft" "<password>" 
+  # builder::Deploy "~/indusoft/projects/stage/linux-x86/release/hardware_validator/build.json" "devindusoft.azurecr.io" "devindusoft" "<password>"
 }
