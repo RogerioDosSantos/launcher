@@ -51,9 +51,9 @@ builder::CreateProjectMetadata()
   full_name=${full_name//\//-}
   full_name=${full_name/--/-}
   full_version=${full_version/--/-}
-  build_timestamp="$(date --utc +%FT%T.%3NZ)"
+  timestamp="$(date --utc +%FT%T.%3NZ)"
 
-  json::VarsToJson name platform flavor version commit branch timestamp tag location upper_name upper_version upper_commit upper_branch upper_timestamp upper_tag upper_location full_name full_version build_timestamp
+  json::VarsToJson name platform flavor version commit branch timestamp tag location upper_name upper_version upper_commit upper_branch upper_timestamp upper_tag upper_location full_name full_version timestamp
 }
 
 builder::BuildCmake()
@@ -115,10 +115,65 @@ builder::BuildCmake()
       cat ./build.json
     ")"
 
-    if [ "$(json::GetValue "${build_metadata}" 'build_timestamp')" == "$(json::GetValue "${project_metadata}" 'build_timestamp')" ]; then
+    if [ "$(json::GetValue "${build_metadata}" 'timestamp')" == "$(json::GetValue "${project_metadata}" 'timestamp')" ]; then
       echo "[ ${full_name} ] - SUCCESS"
     else
       echo "[ ${full_name} ] - FAILED"
     fi
   done
+}
+
+builder::IsImageAvailable()
+{
+  # Usage: IsImageAvailable <in:image_name> <in:image_version> [<in:server> [<in:user> <in:password>]]
+  local in_image_name=$1
+  local in_image_version=$2
+  local in_server=$3
+  local in_user=$4
+  local in_password=$5
+
+  local image_full_name="${in_server}/${in_image_name}:${in_image_version}"
+  if [ "${in_server}" == "" ]; then
+    image_full_name="${in_image_name}:${in_image_version}"
+  fi
+
+  local command_login="docker login --username ${in_user} --password ${in_password} devindusoft.azurecr.io"
+  if [ "${in_user}" == "" ]; then
+    command_login="echo ''"
+  fi
+
+  #TODO(Roger) - Find a way to do not show erro on the screen when the image does not exits
+  local image_info="$(script::ExecOnHost "false" "
+    echo '{'
+    printf '\"%s\": \"%s\",' 'login_result' \"\$(${command_login})\" | echo \$(cat) ;
+    printf '\"%s\": \"%s\",' 'pull_result' \"\$(docker pull ${image_full_name})\" | echo \$(cat) ;
+    printf '\"%s\": \"%s\"' 'image' \"\$(docker images --format \"{{.Repository}}:{{.Tag}}\" --filter \"reference=${image_full_name}\")\" | echo \$(cat) ;
+    echo '}'
+  ")"
+
+  local image_found="$(json::GetValue "${image_info}" 'image')"
+  if [ "${image_found}" == "${image_full_name}" ]; then
+    echo "true"
+    return 0
+  fi
+
+  echo "false"
+}
+
+builder::Deploy()
+{
+  # Usage Deploy <in:server> <in:build_metadata_path>
+  local in_server=$1
+  local in_build_metadata_path=$2
+
+  # local build_dir="${in_build_metadata_path%/*}"
+  local build_metadata="$(script::ExecOnHost "false" "
+    cat ${in_build_metadata_path}
+  ")"
+  local full_name=$(json::GetValue "${build_metadata}" 'full_name')
+  local full_version=$(json::GetValue "${build_metadata}" 'full_version')
+  local docker_container_name="${in_server}/${function_name}:${full_version}"
+
+  echo "$LINENO - ${build_metadata}"
+
 }
