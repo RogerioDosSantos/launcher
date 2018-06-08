@@ -15,14 +15,14 @@ builder::CreateProjectMetadata()
     printf '\"%s\": \"%s\",' 'version' \"\$(git rev-parse --short HEAD)\" | echo \$(cat) ;
     printf '\"%s\": \"%s\",' 'commit' \"\$(git rev-parse HEAD)\" | echo \$(cat) ;
     printf '\"%s\": \"%s\",' 'branch' \"\$(git rev-parse --abbrev-ref HEAD)\" | echo \$(cat) ;
-    printf '\"%s\": \"%s\",' 'timestamp' \"\$(git log -1 --date=iso --pretty=format:%cd)\" | echo \$(cat) ;
+    printf '\"%s\": \"%s\",' 'time' \"\$(git log -1 --date=iso --pretty=format:%cd)\" | echo \$(cat) ;
     # printf '\"%s\": \"%s\",' 'tag' \"\$(git describe --tags)\" | echo \$(cat) ;
     cd ..
     printf '\"%s\": \"%s\",' 'upper_module_dir' \"\$(git rev-parse --show-toplevel)\" | echo \$(cat) ;
     printf '\"%s\": \"%s\",' 'upper_version' \"\$(git rev-parse --short HEAD)\" | echo \$(cat) ;
     printf '\"%s\": \"%s\",' 'upper_commit' \"\$(git rev-parse HEAD)\" | echo \$(cat) ;
     printf '\"%s\": \"%s\",' 'upper_branch' \"\$(git rev-parse --abbrev-ref HEAD)\" | echo \$(cat) ;
-    printf '\"%s\": \"%s\"' 'upper_timestamp' \"\$(git log -1 --date=iso --pretty=format:%cd)\" | echo \$(cat) ;
+    printf '\"%s\": \"%s\"' 'upper_time' \"\$(git log -1 --date=iso --pretty=format:%cd)\" | echo \$(cat) ;
     # printf '\"%s\": \"%s\",' 'upper_tag' \"\$(git describe --tags)\" | echo \$(cat) ;
     echo '}'
   ")"
@@ -33,27 +33,28 @@ builder::CreateProjectMetadata()
   local version="$(json::GetValue "${git_result}" 'version')"
   local commit="$(json::GetValue "${git_result}" 'commit')"
   local branch="$(json::GetValue "${git_result}" 'branch')"
-  local timestamp="$(json::GetValue "${git_result}" 'timestamp')"
+  local time="$(json::GetValue "${git_result}" 'time')"
   local tag="$(json::GetValue "${git_result}" 'tag')"
   local upper_module_dir="$(json::GetValue "${git_result}" 'upper_module_dir')"
   local upper_name="${upper_module_dir##*/}"
   local upper_version="$(json::GetValue "${git_result}" 'upper_version')"
   local upper_commit="$(json::GetValue "${git_result}" 'upper_commit')"
   local upper_branch="$(json::GetValue "${git_result}" 'upper_branch')"
-  local upper_timestamp="$(json::GetValue "${git_result}" 'upper_timestamp')"
+  local upper_time="$(json::GetValue "${git_result}" 'upper_time')"
   local upper_tag="$(json::GetValue "${git_result}" 'upper_tag')"
 
-  local location="${module_dir/${upper_module_dir}/}"
-  location="${location/${name}/}"
-  location="${location::-1}"
-  local full_name="${upper_name}-${location}-${name}-${platform}-${flavor}"
+  local source_location="${module_dir/${upper_module_dir}/}"
+  # source_location="${source_location/${name}/}"
+  # source_location="${source_location::-1}"
+  local binary_location="/${platform}/${flavor}/${name}"
+  local full_name="${upper_name}-${source_location}-${platform}-${flavor}"
   local full_version="${upper_branch}-${upper_version}-${branch}-${version}"
   full_name=${full_name//\//-}
   full_name=${full_name/--/-}
   full_version=${full_version/--/-}
-  timestamp="$(date --utc +%FT%T.%3NZ)"
+  build_timestamp="$(date --utc +%FT%T.%3NZ)"
 
-  json::VarsToJson name platform flavor version commit branch timestamp tag location upper_name upper_version upper_commit upper_branch upper_timestamp upper_tag upper_location full_name full_version timestamp
+  json::VarsToJson name platform flavor version commit branch time tag upper_name upper_version upper_commit upper_branch upper_time upper_tag source_location binary_location full_name full_version build_timestamp
 }
 
 builder::BuildCmake()
@@ -148,7 +149,7 @@ builder::IsImageAvailable()
   local in_password=$5
 
   local image_full_name="$(builder::GetFullImageName "${in_image_name}" "${in_image_version}" "${in_server}")"
-  local command_login="docker login --username ${in_user} --password ${in_password} devindusoft.azurecr.io"
+  local command_login="docker login --username ${in_user} --password ${in_password} ${in_server}"
   if [ "${in_user}" == "" ]; then
     command_login="echo ''"
   fi
@@ -171,21 +172,96 @@ builder::IsImageAvailable()
   echo "false"
 }
 
-builder::Deploy()
+builder::GetDataImageInfo()
 {
-  # Usage Deploy <in:server> <in:build_metadata_path>
-  local in_server=$1
-  local in_build_metadata_path=$2
+  # Usage: GetDataImageInfo <in:image_name>
+  local in_image_name=$1
 
-  # local build_dir="${in_build_metadata_path%/*}"
+  # TODO(Roger) - I had to call twice because when the docker pull fails it stops everyting. I have to handle this
+  local image_info="$(script::ExecOnHost "false" "
+    pull_result=\$(/bin/bash -c 'docker pull "${in_image_name}"') 
+  ")"
+
+  image_info="$(script::ExecOnHost "false" "
+    docker run --rm -it "${in_image_name}" cat /root/build.json
+  ")"
+
+  if [ "$(json::GetValue "${image_info}" 'name')" == "" ]; then
+    return 0
+  fi
+
+  echo "${image_info}"
+}
+
+builder::CreateImage()
+{
+  # Usage CreateImage <in:build_metadata_path> <in:server>
+  local in_build_metadata_path=$1
+  local in_server=$2
+
   local build_metadata="$(script::ExecOnHost "false" "
     cat ${in_build_metadata_path}
   ")"
   local full_name=$(json::GetValue "${build_metadata}" 'full_name')
   local full_version=$(json::GetValue "${build_metadata}" 'full_version')
-  local docker_container_name="${in_server}/${function_name}:${full_version}"
-  builder::IsImageAvailable "${full_name}" "${full_version}" 
+  local image_full_name="$(builder::GetFullImageName "${full_name}" "${full_version}" "${in_server}")"
+  local build_dir="${in_build_metadata_path%/*}"
+  local name=$(json::GetValue "${build_metadata}" 'name')
+  local build_log="$(script::ExecOnHost "true" "
+    echo '***  Creating image build configuration:'
+    echo '- Build Directory: ${build_dir}'
+    cd ${build_dir}
+    echo 'FROM alpine:3.7' > ./build.docker
+    echo 'WORKDIR /root/' >> ./build.docker
+    echo 'RUN mkdir /root/${name}' >> ./build.docker
+    echo 'COPY ./ /root/${name}/' >> ./build.docker
+    echo 'COPY ./build.json /root/' >> ./build.docker
+    echo '***   Removing existing image:'
+    docker rmi \""${image_full_name}"\"
+    echo '***   Building image:'
+    docker build -f ./build.docker -t \""${image_full_name}\"" .
+  ")"
 
-  echo "$LINENO - ${build_metadata}"
+  if [ "$(builder::IsImageAvailable "${full_name}" "${full_version}" "${in_server}")" == "true" ]; then
+    echo "${image_full_name}"
+  fi
+}
+
+builder::Deploy()
+{
+  # Usage Deploy <in:server> <in:build_metadata_path>
+  local in_build_metadata_path=$1
+  local in_server=$2
+  local in_user=$3
+  local in_password=$4
+
+  local build_metadata="$(script::ExecOnHost "false" "
+    cat ${in_build_metadata_path}
+  ")"
+  local full_name=$(json::GetValue "${build_metadata}" 'full_name')
+  local full_version=$(json::GetValue "${build_metadata}" 'full_version')
+  local image_full_name="$(builder::GetFullImageName "${full_name}" "${full_version}" "${in_server}")"
+  if [ "$(builder::IsImageAvailable "${full_name}" "${full_version}" "${in_server}" "${in_user}" "${in_password}")" == "false" ]; then
+    local build_dir="${in_build_metadata_path%/*}"
+    local name=$(json::GetValue "${build_metadata}" 'name')
+    local build_log="$(script::ExecOnHost "true" "
+      echo '***  Creating image build configuration:'
+      echo '- Build Directory: ${build_dir}'
+      cd ${build_dir}
+      echo 'FROM alpine:3.7' > ./build.docker
+      echo 'WORKDIR /root/' >> ./build.docker
+      echo 'RUN mkdir /root/${name}' >> ./build.docker
+      echo 'COPY ./ /root/${name}/' >> ./build.docker
+      docker build -f ./build.docker -t \""${image_full_name}\"" .
+    ")"
+    if [ "$(builder::IsImageAvailable "${full_name}" "${full_version}" "${in_server}" "${in_user}" "${in_password}")" == "false" ]; then
+      echo "[ ${image_full_name} ] - CREATION FAILED"
+      return 0
+    fi
+
+    echo "[ ${image_full_name} ] - CREATION SUCCESS"
+  fi
+
+  # echo "$LINENO - ${build_metadata}"
 
 }
