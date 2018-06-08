@@ -157,7 +157,7 @@ runner::Runner()
 
   while [ true ]; do
     local instruction=$(runner::RunCommand "${container_name}" -gi "${command_id}")
-    runner::Debug "${in_caller_dir}" "${instruction}"
+    # runner::Debug "${in_caller_dir}" "${instruction}"
     eval "${instruction}"
   done 
 }

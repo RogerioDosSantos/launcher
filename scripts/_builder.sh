@@ -86,8 +86,14 @@ builder::BuildCmake()
   local cmake_file_dir="${in_cmake_file_path%/*}"
   for build_flavor in "${build_flavors[@]}"; do
     local project_metadata=$(builder::CreateProjectMetadata "${cmake_file_dir}" "${in_platform}" "${build_flavors,,}")
-    local project_name="$(json::GetValue "${project_metadata}" 'name')"
     local full_name="$(json::GetValue "${project_metadata}" 'full_name')"
+    local build_timestamp="$(json::GetValue "${project_metadata}" 'build_timestamp')"
+    if [ "${build_timestamp}" == "" ]; then
+      echo "[ ${full_name} ] - FAILED"
+      continue
+    fi
+
+    local project_name="$(json::GetValue "${project_metadata}" 'name')"
     local relative_build_dir="build/${in_platform}-${build_flavor,,}"
     local build_dir="${cmake_file_dir}/${relative_build_dir}"
     local cmake_staging_parameters="-DCMAKE_BUILD_TYPE=${build_flavor} -DCMAKE_INSTALL_PREFIX=../../../stage/"
@@ -109,18 +115,20 @@ builder::BuildCmake()
       ./build/builder/${in_platform} ./${project_name}/${relative_build_dir}/build.sh
     ")"
 
+    local binary_location="$(json::GetValue "${project_metadata}" 'binary_location')"
     local build_metadata="$(script::ExecOnHost "false" "
       cd "${cmake_file_dir}/.."
-      cd "./stage/${in_platform,,}/${build_flavor,,}/${project_name,,}"
+      cd ./stage/"${binary_location}"
       echo '${build_log}' > ./build_detail.log
       cat ./build.json
     ")"
 
-    if [ "$(json::GetValue "${build_metadata}" 'timestamp')" == "$(json::GetValue "${project_metadata}" 'timestamp')" ]; then
-      echo "[ ${full_name} ] - SUCCESS"
-    else
+    if [ "$(json::GetValue "${build_metadata}" 'build_timestamp')" != "${build_timestamp}" ]; then
       echo "[ ${full_name} ] - FAILED"
+      continue
     fi
+
+    echo "[ ${full_name} ] - SUCCESS"
   done
 }
 
