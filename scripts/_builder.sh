@@ -116,10 +116,12 @@ builder::BuildCmake()
     ")"
 
     local binary_location="$(json::GetValue "${project_metadata}" 'binary_location')"
+
+    # TODO(Roger) - Find a way to protect the build_log in this way I can add the line below to create the log of the build.
+    # echo '${build_log}' > ./build_detail.log
     local build_metadata="$(script::ExecOnHost "false" "
       cd "${cmake_file_dir}/.."
       cd ./stage/"${binary_location}"
-      echo '${build_log}' > ./build_detail.log
       cat ./build.json
     ")"
 
