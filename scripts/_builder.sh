@@ -245,33 +245,16 @@ builder::Deploy()
   local in_user=$3
   local in_password=$4
 
-  local build_metadata="$(script::ExecOnHost "false" "
-    cat ${in_build_metadata_path}
-  ")"
-  local full_name=$(json::GetValue "${build_metadata}" 'full_name')
-  local full_version=$(json::GetValue "${build_metadata}" 'full_version')
-  local image_full_name="$(builder::GetFullImageName "${full_name}" "${full_version}" "${in_server}")"
-  if [ "$(builder::IsImageAvailable "${full_name}" "${full_version}" "${in_server}" "${in_user}" "${in_password}")" == "false" ]; then
-    local build_dir="${in_build_metadata_path%/*}"
-    local name=$(json::GetValue "${build_metadata}" 'name')
-    local build_log="$(script::ExecOnHost "true" "
-      echo '***  Creating image build configuration:'
-      echo '- Build Directory: ${build_dir}'
-      cd ${build_dir}
-      echo 'FROM alpine:3.7' > ./build.docker
-      echo 'WORKDIR /root/' >> ./build.docker
-      echo 'RUN mkdir /root/${name}' >> ./build.docker
-      echo 'COPY ./ /root/${name}/' >> ./build.docker
-      docker build -f ./build.docker -t \""${image_full_name}\"" .
-    ")"
-    if [ "$(builder::IsImageAvailable "${full_name}" "${full_version}" "${in_server}" "${in_user}" "${in_password}")" == "false" ]; then
-      echo "[ ${image_full_name} ] - CREATION FAILED"
-      return 0
-    fi
-
-    echo "[ ${image_full_name} ] - CREATION SUCCESS"
+  local image_full_name=$(builder::CreateImage "${in_build_metadata_path}" "${in_server}")
+  if [ "${image_full_name}" == "" ]; then
+    return 0
   fi
 
-  # echo "$LINENO - ${build_metadata}"
+  local deploy_log="$(script::ExecOnHost "true" "
+    echo '***  Creating uploading "${image_full_name}":' ;
+    docker login --username ${in_user} --password ${in_password} ${in_server}
+    docker push "${image_full_name}"
+  ")"
 
+  echo "${image_full_name}"
 }
