@@ -252,9 +252,30 @@ builder::Deploy()
 
   local deploy_log="$(script::ExecOnHost "true" "
     echo '***  Creating uploading "${image_full_name}":' ;
-    docker login --username ${in_user} --password ${in_password} ${in_server}
-    docker push "${image_full_name}"
+    docker login --username ${in_user} --password ${in_password} ${in_server} ;
+    docker push "${image_full_name}" ;
+    echo '***  Checking if image was properly uploaded:' ;
+    docker rmi "${image_full_name}" ;
+    docker pull "${image_full_name}" ;
+    # echo '***  Getting image metadata:';
+    # docker run -it --rm "${image_full_name}" cat ./build.json 
   ")"
+
+  local local_metadata="$(script::ExecOnHost "false" "
+    cat ${in_build_metadata_path}
+  ")"
+  local local_timestamp="$(json::GetValue "${local_metadata}" 'build_timestamp')"
+  if [ "${local_timestamp}" == "" ]; then
+    return 0
+  fi
+
+  local remote_metadata="$(script::ExecOnHost "false" "
+    docker run -it --rm "${image_full_name}" cat ./build.json
+  ")"
+  local remote_timestamp="$(json::GetValue "${remote_metadata}" 'build_timestamp')"
+  if [ "${local_timestamp}" != "${remote_timestamp}" ]; then
+    return 0
+  fi
 
   echo "${image_full_name}"
 }
