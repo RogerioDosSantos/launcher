@@ -197,6 +197,7 @@ builder::GetDataImageInfo()
   ")"
 
   if [ "$(json::GetValue "${image_info}" 'name')" == "" ]; then
+    log::Log "error" "1" "Could not find name on the image_info" ""
     return 0
   fi
 
@@ -247,6 +248,7 @@ builder::Deploy()
 
   local image_full_name=$(builder::CreateImage "${in_build_metadata_path}" "${in_server}")
   if [ "${image_full_name}" == "" ]; then
+    log::Log "error" "1" "Could not find image full_name" ""
     return 0
   fi
 
@@ -266,6 +268,7 @@ builder::Deploy()
   ")"
   local local_timestamp="$(json::GetValue "${local_metadata}" 'build_timestamp')"
   if [ "${local_timestamp}" == "" ]; then
+    log::Log "error" "1" "Could not get the local timestamp" ""
     return 0
   fi
 
@@ -274,6 +277,7 @@ builder::Deploy()
   ")"
   local remote_timestamp="$(json::GetValue "${remote_metadata}" 'build_timestamp')"
   if [ "${local_timestamp}" != "${remote_timestamp}" ]; then
+    log::Log "error" "1" "Remote image timestamp does not match the local image timestamp" ""
     return 0
   fi
 
