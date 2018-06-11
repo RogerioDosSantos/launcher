@@ -9,20 +9,27 @@ json::IsValid()
 
 json::GetValue()
 {
-  # Usage GetValue <in:json> <in:value_name> <in:default_value>
+  # Usage GetValue <in:json> <in:value_name> [<in:format>]
   local in_json=$1
   local in_value_name=$2
-  local in_default_value=$3
+  local in_format=$3
 
-  # local resp="$(exec 2>1;  echo "${in_json}" | python -c "import sys, json; print json.load(sys.stdin)['${in_value_name}']" ; echo "$?")"
-  local resp="$(exec 2>1; echo "${in_json}" | jq ."${in_value_name}" ; echo "$?")"
+  local resp=""
+  if [ "${in_format}" == "" ]; then
+    resp="$(exec 2>1; echo "${in_json}" | jq ."${in_value_name}" ; echo "$?")"
+    resp=${resp//\"/}
+  else
+    local format=""
+    printf -v 'format' '.%s | @%s' "${in_value_name}" "${in_format}" 
+    resp="$(exec 2>1; echo "${in_json}" | jq "${format}" ; echo "$?")"
+  fi
+  
   local error="${resp##*$'\n'}"
   if [ "${error}" == "1" ]; then
     return 0
   fi
 
   resp=$(echo "${resp}" | sed '$d')
-  resp=${resp//\"/}
   echo "${resp}"
 }
 
