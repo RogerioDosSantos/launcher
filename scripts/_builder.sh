@@ -227,7 +227,7 @@ builder::CreateImage()
     echo 'COPY ./ /root/${name}/' >> ./build.docker
     echo 'COPY ./build.json /root/' >> ./build.docker
     echo '***   Removing existing image:'
-    docker rmi \""${image_full_name}"\"
+    result=$(docker rmi \""${image_full_name}"\")
     echo '***   Building image:'
     docker build -f ./build.docker -t \""${image_full_name}\"" .
   ")"
