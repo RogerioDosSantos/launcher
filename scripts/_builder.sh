@@ -48,13 +48,17 @@ builder::CreateProjectMetadata()
   # source_location="${source_location::-1}"
   local binary_location="/${platform}/${flavor}/${name}"
   local full_name="${upper_name}-${source_location}-${platform}-${flavor}"
-  local full_version="${upper_branch}-${upper_version}-${branch}-${version}"
   full_name=${full_name//\//-}
   full_name=${full_name/--/-}
+
+  local full_version="${upper_branch}-${branch}-${version}"
   full_version=${full_version/--/-}
+
+  local last_version="${upper_branch}-${branch}"
+  last_version=${last_version/--/-}
   build_timestamp="$(date --utc +%FT%T.%3NZ)"
 
-  json::VarsToJson name platform flavor version commit branch time tag upper_name upper_version upper_commit upper_branch upper_time upper_tag source_location binary_location full_name full_version build_timestamp
+  json::VarsToJson name platform flavor version commit branch time tag upper_name upper_version upper_commit upper_branch upper_time upper_tag source_location binary_location full_name full_version last_version build_timestamp
 }
 
 builder::BuildCmake()
@@ -252,20 +256,25 @@ builder::Deploy()
     return 0
   fi
 
+  local local_metadata="$(script::ExecOnHost "false" "
+    cat ${in_build_metadata_path}
+  ")"
+  local full_name=$(json::GetValue "${local_metadata}" 'full_name')
+  local last_version=$(json::GetValue "${local_metadata}" 'last_version')
+  local last_image_full_name="$(builder::GetFullImageName "${full_name}" "${last_version}" "${in_server}")"
   local deploy_log="$(script::ExecOnHost "true" "
     echo '***  Creating uploading "${image_full_name}":' ;
     docker login --username ${in_user} --password ${in_password} ${in_server} ;
     docker push "${image_full_name}" ;
+    docker tag "${image_full_name}" "${last_image_full_name}"
+    docker push "${last_image_full_name}" ;
     echo '***  Checking if image was properly uploaded:' ;
     docker rmi "${image_full_name}" ;
+    docker rmi "${last_image_full_name}" ;
     docker pull "${image_full_name}" ;
-    # echo '***  Getting image metadata:';
-    # docker run -it --rm "${image_full_name}" cat ./build.json 
+    docker pull "${last_image_full_name}" ;
   ")"
 
-  local local_metadata="$(script::ExecOnHost "false" "
-    cat ${in_build_metadata_path}
-  ")"
   local local_timestamp="$(json::GetValue "${local_metadata}" 'build_timestamp')"
   if [ "${local_timestamp}" == "" ]; then
     log::Log "error" "1" "Could not get the local timestamp" ""
@@ -283,3 +292,18 @@ builder::Deploy()
 
   echo "${image_full_name}"
 }
+
+builder::BuildProject()
+{
+  # Usage: BuildProject <in:config_file_path>
+  local in_config_file_path=$1
+
+  local config="$(script::ExecOnHost "false" "
+    cat ${in_config_file_path}
+  ")"
+
+  local projects="$(json::GetValue "${config}" 'projects')"
+
+  echo "$LINENO - ${projects}"
+}
+

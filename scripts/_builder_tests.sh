@@ -77,3 +77,8 @@ builder_tests::Deploy()
   builder::Deploy "~/indusoft/projects/stage/linux-x86/release/hardware_validator/build.json" "devindusoft.azurecr.io" "devindusoft" "${password}"
 }
 
+builder_tests::BuildProject()
+{
+  builder::BuildProject "~/indusoft/projects/stage/products/all/projects.json"
+}
+

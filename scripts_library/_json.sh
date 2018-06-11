@@ -14,13 +14,15 @@ json::GetValue()
   local in_value_name=$2
   local in_default_value=$3
 
-  local resp="$(exec 2>1;  echo "${in_json}" | python -c "import sys, json; print json.load(sys.stdin)['${in_value_name}']" ; echo "$?")"
+  # local resp="$(exec 2>1;  echo "${in_json}" | python -c "import sys, json; print json.load(sys.stdin)['${in_value_name}']" ; echo "$?")"
+  local resp="$(exec 2>1; echo "${in_json}" | jq ."${in_value_name}" ; echo "$?")"
   local error="${resp##*$'\n'}"
   if [ "${error}" == "1" ]; then
     return 0
   fi
 
   resp=$(echo "${resp}" | sed '$d')
+  resp=${resp//\"/}
   echo "${resp}"
 }
 

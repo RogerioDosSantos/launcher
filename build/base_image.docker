@@ -13,6 +13,7 @@ RUN apt-get update \
              pandoc \
              python \
              lynx \
+             jq \
 	&& apt-get autoclean
 					
 ENTRYPOINT ["/scripts_library/main.sh"]
