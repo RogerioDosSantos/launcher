@@ -1,10 +1,18 @@
 
-### Options
+#START=Description
+
+builder [--<options> <parameters>...]  --<command> <parameters> 
+
+#END
+
+#START=Options
 
  "--upload_image" "-ui" "builder::deploy_image 'true'" "0" "--upload_image (-ui)" "Create and upload a docker image of a build."
 
-### Functions
+#END
+
+#START=Commands
 
  "--build_product" "-bp" "builder::BuildProduct" "1" "--build_product (-bp) <in:product_config_file_path>" "Build product according its configuration. E.g.: -bp /indusoft/projects/build/products/all.json"
 
-  
+#END

@@ -446,8 +446,46 @@ script::ExecScript()
 
 script::Help()
 {
-  # TODO (Roger) 
-  echo "Help Called"
+  local description="$(sed -n '/^#START=Description$/,/^#END$/p' /scripts/_command_config | grep "^[^#;]")"
+  echo "${description}"
+
+  local options="$(sed -n '/^#START=Options$/,/^#END$/p' /scripts/_command_config | grep "^[^#;]")"
+  echo " "
+  echo "- Options: "
+  echo " "
+  while read line; do
+    local name="$(script::GetElementFromCommandLine "5" "${line}")"
+    local description="$(script::GetElementFromCommandLine "6" "${line}")"
+    name=${name%\"}
+    name=${name#\"}
+    description=${description%\"}
+    description=${description#\"}
+    if [ "${name}" == "" ]; then
+      continue
+    fi
+
+    printf '%q : %q\n' "${name}" "${description}"
+  done <<< "${options}"
+
+  local commands="$(sed -n '/^#START=Commands$/,/^#END$/p' /scripts/_command_config | grep "^[^#;]")"
+  echo " "
+  echo "- Commands: "
+  echo " "
+  while read line; do
+    local name="$(script::GetElementFromCommandLine "5" "${line}")"
+    local description="$(script::GetElementFromCommandLine "6" "${line}")"
+    name=${name%\"}
+    name=${name#\"}
+    description=${description%\"}
+    description=${description#\"}
+    if [ "${name}" == "" ]; then
+      continue
+    fi
+
+    printf '%q : %q\n' "${name}" "${description}"
+  done <<< "${commands}"
+
+  echo " "
 }
 
 script::RunFunction()
