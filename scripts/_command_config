@@ -1,10 +1,10 @@
 
 ### Options
 
- "--create_project_metadata" "-pm" "builder::SetCreateProjectMetadata" "0" "--create_project_metadata (-pm) <in:status>" "Set the status if project metadata should be created during the build [0: disabled ; 1: enabled (Default)]"
+ "--upload_image" "-ui" "builder::deploy_image 'true'" "0" "--upload_image (-ui)" "Create and upload a docker image of a build."
 
 ### Functions
 
- "--build_cmake" "-bc" "builder::BuildCmake" "1" "--build_cmake (-bc) <in:cmake_file_path>" "Build a CMake project"
+ "--build_product" "-bp" "builder::BuildProduct" "1" "--build_product (-bp) <in:product_config_file_path>" "Build product according its configuration. E.g.: -bp /indusoft/projects/build/products/all.json"
 
   

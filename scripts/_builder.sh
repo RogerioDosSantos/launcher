@@ -1,4 +1,34 @@
 
+builder::deploy_image()
+{
+  if [ "$#" != 0 ]; then
+    builder__deploy_image="$1"
+    return 0
+  fi
+
+  echo "${builder__deploy_image:-"false"}"
+}
+
+builder::build_platform()
+{
+  if [ "$#" != 0 ]; then
+    builder__build_platform="$1"
+    return 0
+  fi
+
+  echo "${builder__build_platform:-"all"}"
+}
+
+builder::build_flavor()
+{
+  if [ "$#" != 0 ]; then
+    builder__build_flavor="$1"
+    return 0
+  fi
+
+  echo "${builder__build_flavor:-"all"}"
+}
+
 builder::CreateProjectMetadata()
 {
   # Usage: CreateProjectMetadata <in:project_dir> <in:platform> <in:flavor>
@@ -44,8 +74,6 @@ builder::CreateProjectMetadata()
   local upper_tag="$(json::GetValue "${git_result}" 'upper_tag')"
 
   local source_location="${module_dir/${upper_module_dir}/}"
-  # source_location="${source_location/${name}/}"
-  # source_location="${source_location::-1}"
   local binary_location="/${platform}/${flavor}/${name}"
   local full_name="${upper_name}-${source_location}-${platform}-${flavor}"
   full_name=${full_name//\//-}
@@ -69,23 +97,29 @@ builder::BuildCmake()
   local in_flavor=${3,,}
   
   local build_flavors=()
-  case ${in_flavor} in
-      all)
+  case "${in_flavor}" in
+      "all")
         build_flavors+=('Release')
         build_flavors+=('RelWithDebInfo')
         build_flavors+=('Debug')
         ;;
-      release)
+      "release")
         build_flavors+=('Release')
         #TODO(Roger) - Enable the code below so we can have debug info on every release
         # build_flavors+=('RelWithDebInfo')
         ;;
-      debug)
+      "debug")
         build_flavors+=('Debug')
         ;;
       *)
         ;;
   esac
+
+  if [ "${#build_flavors[@]}" == "0" ]; then
+    log::Log "error" "1" "No compartible flavor was found" ""
+    echo "[ ${full_name} ] - FAILED"
+    return 0
+  fi
 
   local cmake_file_dir="${in_cmake_file_path%/*}"
   for build_flavor in "${build_flavors[@]}"; do
@@ -93,6 +127,7 @@ builder::BuildCmake()
     local full_name="$(json::GetValue "${project_metadata}" 'full_name')"
     local build_timestamp="$(json::GetValue "${project_metadata}" 'build_timestamp')"
     if [ "${build_timestamp}" == "" ]; then
+      log::Log "error" "1" "Build timestamp did not match" ""
       echo "[ ${full_name} ] - FAILED"
       continue
     fi
@@ -130,6 +165,7 @@ builder::BuildCmake()
     ")"
 
     if [ "$(json::GetValue "${build_metadata}" 'build_timestamp')" != "${build_timestamp}" ]; then
+      log::Log "error" "1" "Build timestamp did not match" ""
       echo "[ ${full_name} ] - FAILED"
       continue
     fi
@@ -231,8 +267,8 @@ builder::CreateImage()
     echo 'RUN mkdir /root/${name}' >> ./build.docker
     echo 'COPY ./ /root/${name}/' >> ./build.docker
     echo 'COPY ./build.json /root/' >> ./build.docker
-    echo '***   Removing existing image:'
-    result=\$(docker rmi \""${image_full_name}"\")
+    # echo '***   Removing existing image:'
+    # result=\$(docker rmi \""${image_full_name}"\")
     echo '***   Building image:'
     docker build -f ./build.docker -t \""${image_full_name}\"" .
   ")"
@@ -293,17 +329,54 @@ builder::Deploy()
   echo "${image_full_name}"
 }
 
-builder::BuildProject()
+builder::BuildProduct()
 {
-  # Usage: BuildProject <in:config_file_path>
+  # Usage: BuildProduct <in:config_file_path>
   local in_config_file_path=$1
 
   local config="$(script::ExecOnHost "false" "
     cat ${in_config_file_path}
   ")"
 
-  local projects="$(json::GetValue "${config}" 'projects')"
+  local projects=$(json::GetValue "${config}" 'projects' 'sh')
+  projects=${projects%\"}
+  projects=${projects#\"}
+  projects=${projects//\'/}
+  projects=$(echo "$projects" | sed -e 'y/\ /\n/')
 
-  echo "$LINENO - ${projects}"
+  local platforms=$(builder::build_platform)
+  if [ "${platforms}" == "all" ]; then
+    platforms=$(json::GetValue "${config}" 'platforms' 'sh')
+    platforms=${platforms%\"}
+    platforms=${platforms#\"}
+    platforms=${platforms//\'/}
+    platforms=$(echo "$platforms" | sed -e 'y/\ /\n/')
+  fi
+
+  local flavors=$(builder::build_flavor)
+  if [ "${flavors}" == "all" ]; then
+    flavors=$(json::GetValue "${config}" 'flavors' 'sh')
+    flavors=${flavors%\"}
+    flavors=${flavors#\"}
+    flavors=${flavors//\'/}
+    flavors=$(echo "$flavors" | sed -e 'y/\ /\n/')
+  fi
+
+  local projects_dir="${in_config_file_path%/*}"
+  projects_dir=$(dirname $projects_dir)
+  projects_dir=$(dirname $projects_dir)
+  while read -r flavor; do
+    while read -r platform; do
+      while read -r project; do
+
+        builder::BuildCmake "${projects_dir}/${project}/CMakeLists.txt" "${platform}" "${flavor}"
+        if [ "$(builder::deploy_image)" == "true" ]; then
+          local password=$(cat /quality/.temp_docker_registry_password)
+          builder::Deploy "${projects_dir}/stage/${platform}/${flavor}/${project}/build.json" "devindusoft.azurecr.io" "devindusoft" "${password}"
+        fi
+
+      done <<< "${projects}"
+    done <<< "${platforms}"
+  done <<< "${flavors}"
 }
 
