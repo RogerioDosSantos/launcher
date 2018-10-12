@@ -1,7 +1,16 @@
 
+log::show_log()
+{
+  if [ "$#" != 0 ]; then
+    log__show_log="$1"
+    return 0
+  fi
+
+  echo "${log__show_log:-"false"}"
+}
+
 log::Init()
 {
-  log_config_show_log="0"
   log_config_log_enabled="0"
   # log_config_file_path=".temp_log_$(date '+%Y-%m-%d')"
   log_config_file_path="../session/log"
@@ -32,7 +41,7 @@ log::Log()
 
 log::ShowLog()
 {
-  if [ "${log_config_show_log}" != "1" ]; then 
+  if [ "$(log::show_log)" != "true" ]; then
     return 0
   fi
 
